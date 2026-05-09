@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "ignoreDeprecations": "6.0",
     "lib": ["dom", "dom.iterable", "es6"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -19,7 +18,6 @@
         "name": "next"
       }
     ],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
