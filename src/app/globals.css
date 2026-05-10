@@ -8,15 +8,30 @@
 @layer base {
   :root {
     /* Brand Palette */
-    --color-brand-primary: #14532d;
-    --color-brand-secondary: #166534;
-    --color-brand-accent: #4ade80;
-    --color-brand-muted: #dcfce7;
+    --color-primary: #271e3d;
+    --color-secondary: #166534;
+    --color-accent: #4ade80;
+    --color-muted: #dcfce7;
+    --color-primary: #003b1b;
+
+    --color-background: #f8faf4;
 
     /* Neutrals */
     --color-surface: #ffffff;
     --color-surface-raised: #f9fafb;
     --color-surface-overlay: #f3f4f6;
+    --color-surface-dim: #d8dbd5;
+    --color-surface-bright: #f8faf4;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-low: #f2f4ee;
+    --color-surface-container: #ecefe9;
+    --color-surface-container-high: #e7e9e3;
+    --color-surface-container-highest: #e1e3dd;
+    --color-on-surface: #191c19;
+    --color-on-surface-variant: #404941;
+    --color-surface-raised: #f9fafb;
+    --color-surface-overlay: #f3f4f6;
+
     --color-border: #e5e7eb;
     --color-border-strong: #d1d5db;
     --color-text-primary: #111827;
@@ -39,6 +54,26 @@
     --color-other-veg: #a3e635;
     --color-bare-sediment: #d4a574;
     --color-water: #38bdf8;
+
+    --color-primary-container: #14532d;
+
+    --color-on-primary: #ffffff;
+    --color-on-primary-container: #87c695;
+    --color-secondary: #1f6c3a;
+    --color-on-secondary: #ffffff;
+
+    --color-outline: #717970;
+    --color-outline-variant: #c0c9be;
+    --color-border: #d1d5db;
+    --color-border-strong: #d1d5db;
+
+    --color-brand-muted: #dcfce7;
+    --color-brand-accent: #4ade80;
+    --color-class-spartina: #15803d;
+    --color-class-puccinellia: #86efac;
+    --color-class-water: #38bdf8;
+    --color-text-muted: #9ca3af;
+    --color-surface-tint: #2e6a41;
   }
 
   html {
@@ -46,21 +81,63 @@
   }
 
   body {
-    @apply bg-surface text-text-primary;
+    @apply bg-[var(--color-surface)] text-[var(--color-text-primary)];
   }
 
   * {
-    @apply border-color-border;
+    border-color: var(--color-border);
   }
 }
-
 @layer components {
-  /* Utility classes for common patterns */
+  /* Typography component classes (compose Tailwind utilities) */
+  .heading-page {
+    @apply font-sans text-2xl font-semibold leading-tight; /* 24px / 1.3 ≈ 31.2px → leading-tight (1.25) actually 30px, close enough; adjust if needed */
+  }
+
+  .display-text {
+    @apply font-sans text-3xl font-semibold leading-tight; /* 30px → text-3xl (30px) */
+  }
+
+  .body-primary {
+    @apply font-sans text-base font-normal leading-relaxed; /* 16px / 1.5 = leading-relaxed (1.625) is close; use leading-relaxed */
+  }
+
+  .label-xs {
+    @apply font-sans text-xs font-medium uppercase tracking-wider leading-none;
+  }
+
+  .heading-section {
+    @apply font-sans text-lg font-semibold leading-snug; /* 18px / 1.4 = 25.2px → leading-snug (1.375) close enough */
+  }
+
+  .body-secondary {
+    @apply font-sans text-sm font-normal leading-relaxed;
+  }
+
+  /* Mono / data typography */
+  .data-mono {
+    @apply font-mono text-sm font-medium leading-none;
+  }
+
+  /* UI Patterns */
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-md border border-white/50;
+  }
+
+  .hero-gradient {
+    background: linear-gradient(135deg, #f8faf4 0%, #e1e3dd 100%);
+  }
+
+  .bento-grid {
+    @apply grid grid-cols-12 gap-6; /* 24px = gap-6 */
+  }
+
+  /* Utility for tabular numbers */
   .text-data {
     @apply font-mono tabular-nums;
   }
 
-  /* Motion preference */
+  /* Reduced motion preference */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

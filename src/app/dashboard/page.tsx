@@ -30,13 +30,13 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-text-secondary">Redirecting to login...</p>
-      </div>
-    );
-  }
+  // if (!user) {
+  //   return (
+  //     <div className="flex items-center justify-center h-screen">
+  //       <p className="text-text-secondary">Redirecting to login...</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <AppShell user={user} onSignOut={handleSignOut}>
