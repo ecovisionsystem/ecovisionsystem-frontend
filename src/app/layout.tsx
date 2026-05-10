@@ -1,8 +1,12 @@
-import { Inter } from "next/font/google";
+import type { Metadata } from "next";
 import { cn } from "@/lib/utils";
+import { QueryProvider } from "@/providers/query-provider";
+import { AuthProvider } from "@/providers/auth-provider";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
-
+export const metadata: Metadata = {
+  title: "EcoVision 2.0",
+  description: "UAV Vegetation Intelligence",
+};
 
 export default function RootLayout({
   children,
@@ -10,8 +14,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={cn("font-sans", inter.variable)}>
-      <body>{children}</body>
+    <html lang="en">
+      <body className={cn("bg-surface text-text-primary")}>
+        <QueryProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </QueryProvider>
+      </body>
     </html>
   );
 }
