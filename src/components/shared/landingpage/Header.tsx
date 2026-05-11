@@ -6,13 +6,11 @@ export default function Header() {
           className="text-on-surface-variant hover:text-primary transition-all font-body-primary text-body-primary"
           href="#features"
         >
-          <div className="font-heading-section text-heading-section font-black text-primary">
-            <img
-              src="./branding/ecov2.png"
-              alt="Keele University logo"
-              className="h-10 object-contain"
-            />
-          </div>
+          <img
+            src="./branding/ecov2.png"
+            alt="Keele University logo"
+            className="h-10 object-contain"
+          />
         </a>
         <div className="flex items-center gap-4">
           <nav className="hidden md:flex gap-6 ml-8">
@@ -44,7 +42,7 @@ export default function Header() {
             Sign In
           </a>
           <a
-            className="bg-[#15B62B] text-white text-on-primary px-6 py-2 rounded-lg font-medium hover:bg-surface-tint transition-colors shadow-sm"
+            className="bg-brand-primary text-white text-on-primary px-6 py-2 rounded-lg font-medium hover:bg-surface-tint transition-colors shadow-sm"
             href="/dashboard"
           >
             Dashboard
