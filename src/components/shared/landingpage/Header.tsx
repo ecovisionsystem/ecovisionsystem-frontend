@@ -7,7 +7,11 @@ export default function Header() {
           href="#features"
         >
           <div className="font-heading-section text-heading-section font-black text-primary">
-            ecoVision
+            <img
+              src="./branding/ecov2.png"
+              alt="Keele University logo"
+              className="h-10 object-contain"
+            />
           </div>
         </a>
         <div className="flex items-center gap-4">
@@ -40,7 +44,7 @@ export default function Header() {
             Sign In
           </a>
           <a
-            className="bg-brand-primary text-white text-on-primary px-6 py-2 rounded-lg font-medium hover:bg-surface-tint transition-colors shadow-sm"
+            className="bg-[#15B62B] text-white text-on-primary px-6 py-2 rounded-lg font-medium hover:bg-surface-tint transition-colors shadow-sm"
             href="/dashboard"
           >
             Dashboard

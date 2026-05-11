@@ -21,7 +21,7 @@ export default function Hero() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <a
-                className="bg-primary text-on-primary px-8 py-3 rounded-lg font-medium hover:bg-surface-tint transition-colors shadow-sm flex items-center justify-center gap-2"
+                className="bg-brand-primary text-white px-8 py-3 rounded-lg font-medium hover:bg-surface-tint transition-colors shadow-sm flex items-center justify-center gap-2"
                 href="#features"
               >
                 Explore the Platform
@@ -37,7 +37,7 @@ export default function Hero() {
             </div>
           </div>
           <div className="relative">
-            <div className="absolute -inset-4 bg-primary/5 rounded-xl blur-xl"></div>
+            <div className="absolute -inset-4 bg-brand-primary/5 rounded-xl blur-xl"></div>
             <div className="glass-panel rounded-xl p-4 shadow-xl relative">
               <div className="aspect-[4/3] rounded-lg overflow-hidden bg-surface-dim relative border border-outline-variant">
                 <div
@@ -57,23 +57,23 @@ export default function Hero() {
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-sm bg-class-spartina"></div>
+                      <div className="w-3 h-3 rounded-sm bg-veg-spartina"></div>
                       <span className="text-on-surface font-medium">
                         Spartina
                       </span>
                     </div>
-                    <span className="font-data-mono text-data-mono text-primary">
+                    <span className="data-mono text-data-mono text-primary">
                       62%
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-sm bg-class-puccinellia"></div>
+                      <div className="w-3 h-3 rounded-sm bg-veg-puccinellia"></div>
                       <span className="text-on-surface font-medium">
                         Puccinellia
                       </span>
                     </div>
-                    <span className="font-data-mono text-data-mono text-primary">
+                    <span className="data-mono text-data-mono text-primary">
                       28%
                     </span>
                   </div>

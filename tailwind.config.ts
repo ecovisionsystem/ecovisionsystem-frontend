@@ -15,10 +15,14 @@ const config: Config = {
           accent: "var(--color-accent)",
           muted: "var(--color-muted)",
         },
+        container: {
+          primary: "var(--color-primary-container)",
+        },
         surface: {
           DEFAULT: "var(--color-surface)",
           raised: "var(--color-surface-raised)",
           overlay: "var(--color-surface-overlay)",
+          dim: "var(--color-surface-dim)",
           container: {
             lowest: "var(--color-surface-container-lowest)",
             low: "var(--color-surface-container-low)",
