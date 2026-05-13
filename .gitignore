@@ -12,7 +12,8 @@ dist
 dist-ssr
 *.local
 *.env
-next
+.next
+
 
 # Editor directories and files
 .vscode/*
@@ -24,3 +25,12 @@ next
 *.njsproj
 *.sln
 *.sw?
+
+
+build/
+
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
