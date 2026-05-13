@@ -37,7 +37,7 @@ export default function Header() {
         <div className="flex items-center gap-4">
           <a
             className="text-primary font-medium hover:text-surface-tint transition-colors"
-            href="/auth/login"
+            href="/login"
           >
             Sign In
           </a>
