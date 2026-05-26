@@ -9,15 +9,17 @@ import Footer from "@/components/shared/landingpage/Footer";
 
 export default function HomePage() {
   return (
-    <div className="bg-background text-on-background font-body-primary text-body-primary antialiased min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow">
-        <Hero />
-        <Features />
-        <Architecture />
-        <Partners />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <div className="bg-background text-on-background font-body-primary text-body-primary antialiased min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow">
+          <Hero />
+          <Features />
+          <Architecture />
+          <Partners />
+        </main>
+        <Footer />
+      </div>
+    </>
   );
 }
