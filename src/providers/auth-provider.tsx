@@ -1,38 +1,28 @@
 "use client";
 
+import "@/lib/auth/amplify";
 import { useEffect, ReactNode } from "react";
 import { useAuthStore } from "@/stores/auth.store";
-import { useRouter } from "next/navigation";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { setLoading, setUser, clearUser } = useAuthStore();
-  const router = useRouter();
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
+  const expiresAt = useAuthStore((state) => state.expiresAt);
+  const refreshSession = useAuthStore((state) => state.refreshSession);
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        // Get session token from cookies (httpOnly cookie set by server)
-        // Try to fetch current user info from API
-        const response = await fetch("/api/auth/me", {
-          credentials: "include",
-        });
-
-        if (response.ok) {
-          const user = await response.json();
-          setUser(user);
-        } else {
-          clearUser();
-        }
-      } catch (error) {
-        console.error("Auth initialization failed:", error);
-        clearUser();
-      } finally {
-        setLoading(false);
-      }
-    };
-
     initializeAuth();
-  }, [setUser, clearUser, setLoading]);
+  }, [initializeAuth]);
+
+  useEffect(() => {
+    if (!expiresAt) return;
+
+    const refreshTimeout = Math.max(expiresAt - Date.now() - 60_000, 0);
+    const timer = window.setTimeout(() => {
+      refreshSession();
+    }, refreshTimeout);
+
+    return () => window.clearTimeout(timer);
+  }, [expiresAt, refreshSession]);
 
   return <>{children}</>;
 }

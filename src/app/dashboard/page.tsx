@@ -1,26 +1,23 @@
 "use client";
 
 import React from "react";
-import { useAuthStore } from "@/stores/auth.store";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 
 export default function DashboardPage() {
-  const { user, isLoading } = useAuthStore();
   const router = useRouter();
+  const { user, isLoading, requireAuth, signOut } = useAuth();
 
-  const handleSignOut = () => {
-    // Sign out logic
-    router.push("/auth/login");
-  };
+  requireAuth();
 
   if (isLoading) {
     return (
-      <AppShell user={user} onSignOut={handleSignOut}>
+      <AppShell user={user} onSignOut={signOut}>
         <PageHeader title="Loading..." breadcrumbs={[{ label: "Dashboard" }]} />
         <div className="p-6 space-y-4">
           <Skeleton className="h-20 w-full" />
@@ -39,7 +36,7 @@ export default function DashboardPage() {
   // }
 
   return (
-    <AppShell user={user} onSignOut={handleSignOut}>
+    <AppShell user={user} onSignOut={signOut}>
       <PageHeader
         title="Dashboard"
         breadcrumbs={[{ label: "Dashboard" }]}

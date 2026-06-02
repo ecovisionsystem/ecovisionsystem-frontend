@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { useAuthStore } from "@/stores/auth.store";
+import { useAuth } from "@/hooks/useAuth";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,16 +9,17 @@ import { useRouter } from "next/navigation";
 import { Upload, FileQuestion } from "lucide-react";
 
 export default function UploadPage() {
-  const { user, isLoading } = useAuthStore();
-  const router = useRouter();
+  const { user, isLoading, requireAuth, signOut } = useAuth();
+
+  requireAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleSignOut = () => {
-    router.push("/auth/login");
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
