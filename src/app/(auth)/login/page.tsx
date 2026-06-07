@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input, InputLogin } from "@/components/ui/input";
+import { InputLogin } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { signIn } from "aws-amplify/auth";
+import { signIn, fetchAuthSession, confirmSignIn } from "aws-amplify/auth";
 import { AlertCircle, Cloud, Landmark, Lock, Mail } from "lucide-react";
 import { cx } from "class-variance-authority";
 import { T } from "@/styles/style";
+import next from "next";
 
 function useLoaded() {
   const [loaded, setLoaded] = React.useState(false);
@@ -80,17 +81,62 @@ function AIcon() {
     </svg>
   );
 }
+type LoginStage = "SIGN_IN" | "NEW_PASSWORD_REQUIRED";
 
 export default function LoginPage() {
   const loaded = useLoaded();
   const [tab, setTab] = useState("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmedPassword, setConfirmedPassword] = useState("");
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [stage, setStage] = useState<LoginStage>("SIGN_IN");
+
+  const emailFromInvite = useMemo(
+    () => searchParams.get("email") ?? "",
+    [searchParams],
+  );
+
+  useEffect(() => {
+    if (emailFromInvite) {
+      setEmail(emailFromInvite);
+      setTab("signup");
+    }
+  }, [emailFromInvite]);
+
+  const anim = (delay: number) => ({
+    opacity: loaded ? 1 : 0,
+    transform: loaded ? "translateY(0)" : "translateY(14px)",
+    transition: `opacity .65s ease ${delay}s, transform .65s cubic-bezier(.4,0,.2,1) ${delay}s`,
+  });
+
+  async function routeAfterSignIn() {
+    const session = await fetchAuthSession();
+
+    const idPayload = session.tokens?.idToken?.payload;
+    const accessPayload = session.tokens?.accessToken?.payload;
+
+    const groups =
+      (idPayload?.["cognito:groups"] as string[] | undefined) ??
+      (accessPayload?.["cognito:groups"] as string[] | undefined) ??
+      [];
+
+    if (
+      groups.includes("Admins") ||
+      groups.includes("Researcher") ||
+      groups.includes("Developer") ||
+      groups.includes("Ecologist")
+    ) {
+      router.replace("/dashboard");
+    }
+    router.replace("/unauthorized");
+  }
 
   const handleKeeleSSO = async () => {
     setLoading(true);
@@ -111,28 +157,182 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await signIn({
+      const result = await signIn({
         username: email,
         password,
       });
 
+      const nextStage = result.nextStep.signInStep;
+
+      if (nextStage === "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED") {
+        setStage("NEW_PASSWORD_REQUIRED");
+        setLoading(false);
+        return;
+      }
+
+      if (nextStage === "DONE") {
+        await routeAfterSignIn();
+        return;
+      }
+
       await refreshSession();
-      router.push("/dashboard");
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Sign in failed. Please try again.",
-      );
+      setError(`Unsupported sign-in step: ${nextStage}`);
+    } catch (err: {} | any) {
+      setError(err?.message ?? "Sign in failed. Please try again.");
+    } finally {
       setLoading(false);
     }
   };
 
-  const anim = (delay: number) => ({
-    opacity: loaded ? 1 : 0,
-    transform: loaded ? "translateY(0)" : "translateY(14px)",
-    transition: `opacity .65s ease ${delay}s, transform .65s cubic-bezier(.4,0,.2,1) ${delay}s`,
-  });
+  async function handleNewPassword(event: React.FormEvent) {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+
+    if (newPassword !== confirmedPassword) {
+      setError("Passwords do not match.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const result = await confirmSignIn({
+        challengeResponse: newPassword,
+      });
+
+      const nextStep = result.nextStep.signInStep;
+
+      if (nextStep === "DONE") {
+        await routeAfterSignIn();
+        return;
+      }
+
+      setError(`Unsupported sign-in step: ${nextStep}`);
+    } catch (err: {} | any) {
+      setError(err?.message ?? "Password reset failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (stage === "NEW_PASSWORD_REQUIRED") {
+    return (
+      <Card
+        style={{
+          ...anim(0.14),
+          background: T.white,
+          border: `1px solid ${T.bark}`,
+          boxShadow:
+            "0 2px 24px rgba(15,26,8,.06), 0 1px 3px rgba(15,26,8,.03)",
+        }}
+        className="w-full max-w-md rounded-[20px]"
+      >
+        <div style={{ marginBottom: 26 }}>
+          <h1
+            style={{
+              fontFamily: T.sans,
+              fontSize: 27,
+              fontWeight: 700,
+              color: T.ink,
+              letterSpacing: "-.7px",
+              lineHeight: 1.15,
+              marginBottom: 7,
+            }}
+          >
+            Set New Password
+          </h1>
+          <p
+            style={{
+              fontFamily: T.sans,
+              fontSize: 13.5,
+              color: T.fog,
+              lineHeight: 1.55,
+            }}
+          >
+            Please enter a new password for your account.
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-6 p-3 bg-error-bg border border-error rounded-md flex gap-2">
+            <AlertCircle className="h-5 w-5 text-error flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-error">{error}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleNewPassword}>
+          <div className="mb-4">
+            <label
+              htmlFor="newPassword"
+              className="block text-sm font-medium text-on-surface"
+            >
+              New Password
+            </label>
+            <input
+              type="password"
+              id="newPassword"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="mt-1 block w-full border border-input bg-background py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="mb-5">
+            <label
+              htmlFor="newPassword"
+              className="block text-sm font-medium text-text-primary mb-1"
+            >
+              New Password
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Lock size={16} className="opacity-60" />
+              </div>
+              <InputLogin
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+                disabled={loading}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="mb-5">
+            <label
+              htmlFor="confirmedPassword"
+              className="block text-sm font-medium text-text-primary mb-1"
+            >
+              Confirm New Password
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Lock size={16} className="opacity-60" />
+              </div>
+              <InputLogin
+                id="confirmedPassword"
+                type="password"
+                value={confirmedPassword}
+                onChange={(e) => setConfirmedPassword(e.target.value)}
+                placeholder="••••••••"
+                disabled={loading}
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-primary hover:bg-primary-hover text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+          >
+            {loading ? "Setting Password..." : "Set Password"}
+          </button>
+        </form>
+      </Card>
+    );
+  }
 
   return (
     <div
@@ -236,15 +436,11 @@ export default function LoginPage() {
           >
             {[
               ["signin", "Sign In"],
-              ["signup", "Sign Up"],
+              ["signup", "Sign Up (soon)"],
             ].map(([key, label]) => (
               <button
                 key={key}
-                onClick={() => {
-                  setTab(key);
-                  setError({} as any);
-                  setDone(false);
-                }}
+                disabled={key === "signup" ? true : undefined}
                 style={{
                   flex: 1,
                   padding: "8px 0",
