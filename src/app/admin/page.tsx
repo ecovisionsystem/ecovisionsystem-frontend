@@ -1,20 +1,22 @@
 "use client";
 
 import React from "react";
-import { useAuthStore } from "@/stores/auth.store";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRouter } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 
 export default function AdminPage() {
-  const { user, isLoading } = useAuthStore();
   const router = useRouter();
+  const { user, isLoading, requireAuth, signOut } = useAuth();
 
-  const handleSignOut = () => {
-    router.push("/auth/login");
+  requireAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   // Check if user has admin access

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useAuthStore } from "@/stores/auth.store";
+import { useAuth } from "@/hooks/useAuth";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,15 +12,15 @@ import { Download, ChevronDown } from "lucide-react";
 import type { VegetationClass } from "@/types";
 
 export default function ResultsPage() {
-  const { user, isLoading } = useAuthStore();
+  const { user, isLoading, requireAuth, signOut } = useAuth();
   const router = useRouter();
   const params = useParams();
   const jobId = params.jobId as string;
 
   const [isExportOpen, setIsExportOpen] = React.useState(false);
 
-  const handleSignOut = () => {
-    router.push("/auth/login");
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   if (isLoading) {

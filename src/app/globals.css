@@ -1,5 +1,6 @@
 @import url("https://rsms.me/inter/inter.css");
 @import url("https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/web/jb-mono.css");
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -76,14 +77,24 @@
 
   html {
     font-family: "Inter", system-ui, sans-serif;
+    scroll-behavior: smooth;
   }
 
   body {
     @apply bg-[var(--color-surface)] text-[var(--color-text-primary)];
+    background: var(--color-surface);
+    -webkit-font-smoothing: antialiased;
   }
 
   * {
     border-color: var(--color-border);
+  }
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
 }
 @layer components {
@@ -133,6 +144,64 @@
   /* Utility for tabular numbers */
   .text-data {
     @apply font-mono tabular-nums;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.4;
+      transform: scale(0.75);
+    }
+  }
+  @keyframes scanLine {
+    0% {
+      top: 5%;
+      opacity: 0;
+    }
+    8% {
+      opacity: 1;
+    }
+    92% {
+      opacity: 1;
+    }
+    100% {
+      top: 95%;
+      opacity: 0;
+    }
+  }
+  @keyframes fadeInPatch {
+    from {
+      opacity: 0;
+      transform: scale(0.94);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes crosshairPulse {
+    0%,
+    100% {
+      opacity: 0.8;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+      opacity: 0.3;
+      transform: translate(-50%, -50%) scale(1.5);
+    }
+  }
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
   }
 
   /* Reduced motion preference */

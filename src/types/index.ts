@@ -1,4 +1,21 @@
 /* Auth Types */
+export interface AuthTokenClaims {
+  sub: string;
+  email?: string;
+  name?: string;
+  exp?: number;
+  iat?: number;
+  aud?: string | string[];
+  iss?: string;
+  token_use?: string;
+  email_verified?: boolean;
+  "cognito:groups"?: string[] | string;
+  "custom:role"?: string;
+  "custom:institution"?: string;
+  picture?: string;
+  [key: string]: any;
+}
+
 export interface AuthUser {
   id: string;
   email: string;
