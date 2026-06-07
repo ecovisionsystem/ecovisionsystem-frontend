@@ -11,6 +11,7 @@ import { Upload, FileQuestion } from "lucide-react";
 export default function UploadPage() {
   const { user, isLoading, requireAuth, signOut } = useAuth();
 
+  const router = useRouter();
   requireAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
