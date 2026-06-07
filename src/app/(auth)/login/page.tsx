@@ -90,6 +90,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmedPassword, setConfirmedPassword] = useState("");
+  const [fullName, setFullName] = useState("");
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -195,9 +196,20 @@ export default function LoginPage() {
       return;
     }
 
+    if (!fullName.trim()) {
+      setError("Full name is required.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const result = await confirmSignIn({
         challengeResponse: newPassword,
+        options: {
+          userAttributes: {
+            name: fullName.trim(),
+          },
+        },
       });
 
       const nextStep = result.nextStep.signInStep;
@@ -217,120 +229,168 @@ export default function LoginPage() {
 
   if (stage === "NEW_PASSWORD_REQUIRED") {
     return (
-      <Card
+      <div
         style={{
-          ...anim(0.14),
-          background: T.white,
-          border: `1px solid ${T.bark}`,
-          boxShadow:
-            "0 2px 24px rgba(15,26,8,.06), 0 1px 3px rgba(15,26,8,.03)",
+          background: T.canvas,
         }}
-        className="w-full max-w-md rounded-[20px]"
-      >
-        <div style={{ marginBottom: 26 }}>
-          <h1
-            style={{
-              fontFamily: T.sans,
-              fontSize: 27,
-              fontWeight: 700,
-              color: T.ink,
-              letterSpacing: "-.7px",
-              lineHeight: 1.15,
-              marginBottom: 7,
-            }}
-          >
-            Set New Password
-          </h1>
-          <p
-            style={{
-              fontFamily: T.sans,
-              fontSize: 13.5,
-              color: T.fog,
-              lineHeight: 1.55,
-            }}
-          >
-            Please enter a new password for your account.
-          </p>
-        </div>
-
-        {error && (
-          <div className="mb-6 p-3 bg-error-bg border border-error rounded-md flex gap-2">
-            <AlertCircle className="h-5 w-5 text-error flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-error">{error}</p>
-          </div>
+        className={cx(
+          "min-h-screen relative font-sans text-[#1A1A1A]  selection:bg-[#E0E0D1] selection:text-[#1A1A1A] overflow-hidden",
         )}
-
-        <form onSubmit={handleNewPassword}>
-          <div className="mb-4">
-            <label
-              htmlFor="newPassword"
-              className="block text-sm font-medium text-on-surface"
-            >
-              New Password
-            </label>
-            <input
-              type="password"
-              id="newPassword"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="mt-1 block w-full border border-input bg-background py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="mb-5">
-            <label
-              htmlFor="newPassword"
-              className="block text-sm font-medium text-text-primary mb-1"
-            >
-              New Password
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock size={16} className="opacity-60" />
-              </div>
-              <InputLogin
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="••••••••"
-                disabled={loading}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="mb-5">
-            <label
-              htmlFor="confirmedPassword"
-              className="block text-sm font-medium text-text-primary mb-1"
-            >
-              Confirm New Password
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock size={16} className="opacity-60" />
-              </div>
-              <InputLogin
-                id="confirmedPassword"
-                type="password"
-                value={confirmedPassword}
-                onChange={(e) => setConfirmedPassword(e.target.value)}
-                placeholder="••••••••"
-                disabled={loading}
-                required
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-primary hover:bg-primary-hover text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+      >
+        {/* Subtle dot grid */}
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            pointerEvents: "none",
+            backgroundImage: `radial-gradient(circle, ${T.forest}12 1px, transparent 1px)`,
+            backgroundSize: "28px 28px",
+          }}
+        />
+        {/* Ambient top glow */}
+        <div
+          style={{
+            position: "fixed",
+            top: "-10%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 700,
+            height: 500,
+            pointerEvents: "none",
+            background: `radial-gradient(ellipse, ${T.leaf}09 0%, transparent 65%)`,
+          }}
+        />
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-6 flex-col">
+          <Card
+            style={{
+              ...anim(0.14),
+              background: T.white,
+              border: `1px solid ${T.bark}`,
+              boxShadow:
+                "0 2px 24px rgba(15,26,8,.06), 0 1px 3px rgba(15,26,8,.03)",
+            }}
+            className="w-full max-w-md rounded-[20px]"
           >
-            {loading ? "Setting Password..." : "Set Password"}
-          </button>
-        </form>
-      </Card>
+            <div style={{ marginBottom: 26 }}>
+              <h1
+                style={{
+                  fontFamily: T.sans,
+                  fontSize: 27,
+                  fontWeight: 700,
+                  color: T.ink,
+                  letterSpacing: "-.7px",
+                  lineHeight: 1.15,
+                  marginBottom: 7,
+                }}
+              >
+                Set New Password
+              </h1>
+              <p
+                style={{
+                  fontFamily: T.sans,
+                  fontSize: 13.5,
+                  color: T.fog,
+                  lineHeight: 1.55,
+                }}
+              >
+                Please enter a new password for your account.
+              </p>
+            </div>
+
+            {error && (
+              <div className="mb-6 p-3 bg-error-bg border border-error rounded-md flex gap-2">
+                <AlertCircle className="h-5 w-5 text-error flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-error">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleNewPassword}>
+              <div className="mb-5">
+                <label
+                  htmlFor="fullName"
+                  className="block text-sm font-medium text-text-primary mb-1"
+                >
+                  Full Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock size={16} className="opacity-60" />
+                  </div>
+                  <InputLogin
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="••••••••"
+                    disabled={loading}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="mb-5">
+                <label
+                  htmlFor="newPassword"
+                  className="block text-sm font-medium text-text-primary mb-1"
+                >
+                  New Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock size={16} className="opacity-60" />
+                  </div>
+                  <InputLogin
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    disabled={loading}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="mb-5">
+                <label
+                  htmlFor="confirmedPassword"
+                  className="block text-sm font-medium text-text-primary mb-1"
+                >
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock size={16} className="opacity-60" />
+                  </div>
+                  <InputLogin
+                    id="confirmedPassword"
+                    type="password"
+                    value={confirmedPassword}
+                    onChange={(e) => setConfirmedPassword(e.target.value)}
+                    placeholder="••••••••"
+                    disabled={loading}
+                    required
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full mt-3 text-sm uppercase rounded-sm tracking-widest transition-colors"
+                size="md"
+                style={{
+                  background: loading ? T.moss : T.forest,
+                  cursor: loading ? "default" : "pointer",
+                  boxShadow: `0 3px 14px ${T.forest}40`,
+                }}
+              >
+                {loading ? "Updating Password..." : "Set Password"}
+              </Button>
+            </form>
+          </Card>
+        </div>
+      </div>
     );
   }
 
@@ -440,7 +500,7 @@ export default function LoginPage() {
             ].map(([key, label]) => (
               <button
                 key={key}
-                disabled={key === "signup" ? true : undefined}
+                disabled={key == "signup" ? true : undefined}
                 style={{
                   flex: 1,
                   padding: "8px 0",
