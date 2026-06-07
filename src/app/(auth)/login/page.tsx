@@ -104,12 +104,27 @@ export default function LoginPage() {
     [searchParams],
   );
 
+  const { refreshSession } = useAuth();
+
   useEffect(() => {
     if (emailFromInvite) {
       setEmail(emailFromInvite);
-      setTab("signup");
+      setTab("signin");
     }
-  }, [emailFromInvite]);
+
+    async function redirectIfAlreadySignedIn() {
+      try {
+        const session = await fetchAuthSession();
+        if (session.tokens?.accessToken) {
+          router.replace("/dashboard");
+        }
+      } catch {
+        // Not signed in, do nothing
+      }
+    }
+
+    redirectIfAlreadySignedIn();
+  }, [emailFromInvite, router, refreshSession]);
 
   const anim = (delay: number) => ({
     opacity: loaded ? 1 : 0,
@@ -118,22 +133,28 @@ export default function LoginPage() {
   });
 
   async function routeAfterSignIn() {
+    await refreshSession();
     const session = await fetchAuthSession({ forceRefresh: true });
 
     const idPayload = session.tokens?.idToken?.payload;
     const accessPayload = session.tokens?.accessToken?.payload;
 
-    const groups =
-      (idPayload?.["cognito:groups"] as string[] | undefined) ??
-      (accessPayload?.["cognito:groups"] as string[] | undefined) ??
-      [];
+    const idGroups = idPayload?.["cognito:groups"];
+    const accessGroups = accessPayload?.["cognito:groups"];
 
-    if (
-      groups.includes("Admin") ||
-      groups.includes("Researcher") ||
-      groups.includes("Developer") ||
-      groups.includes("Ecologist")
-    ) {
+    const groups = Array.isArray(idGroups)
+      ? idGroups
+      : Array.isArray(accessGroups)
+        ? accessGroups
+        : [];
+
+    const allowedGroups = ["Admin", "Researcher", "Developer", "Ecologist"];
+
+    const hasAllowedRole = groups.some((group) =>
+      allowedGroups.includes(group as string),
+    );
+
+    if (hasAllowedRole) {
       router.replace("/dashboard");
       return;
     }
@@ -151,14 +172,18 @@ export default function LoginPage() {
     }
   };
 
-  const { refreshSession } = useAuth();
-
   const handleNativeAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
+      const existingSession = await fetchAuthSession();
+      if (existingSession.tokens?.accessToken) {
+        await routeAfterSignIn();
+        return;
+      }
+
       const result = await signIn({
         username: email,
         password,
@@ -177,10 +202,20 @@ export default function LoginPage() {
         return;
       }
 
-      await refreshSession();
       setError(`Unsupported sign-in step: ${nextStage}`);
     } catch (err: {} | any) {
-      setError(err?.message ?? "Sign in failed. Please try again.");
+      const message = err?.message ?? "Sign in failed. Please try again.";
+
+      if (
+        message.includes("already a signed in user") ||
+        message.includes("There is already a signed in user")
+      ) {
+      }
+      {
+        await routeAfterSignIn();
+        return;
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }
