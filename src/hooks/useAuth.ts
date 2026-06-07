@@ -30,10 +30,10 @@ export function useAuth() {
 
   const logout = async () => {
     await signOut();
-    router.replace("/auth/login");
+    router.replace("/login");
   };
 
-  const requireAuth = (redirectPath = "/auth/login") => {
+  const requireAuth = (redirectPath = "/login") => {
     useEffect(() => {
       if (!isLoading && !isAuthenticated) {
         router.replace(redirectPath);

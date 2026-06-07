@@ -35,10 +35,10 @@ export default function CallbackPage() {
         }
 
         // Redirect to dashboard
-        router.push("/dashboard");
+        router.replace("/dashboard");
       } catch (error) {
         console.error("Auth callback error:", error);
-        router.push("/auth/login?error=callback_failed");
+        router.replace("/login?error=callback_failed");
       }
     };
 

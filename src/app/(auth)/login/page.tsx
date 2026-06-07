@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { signIn, fetchAuthSession, confirmSignIn } from "aws-amplify/auth";
-import { AlertCircle, Cloud, Landmark, Lock, Mail } from "lucide-react";
+import { AlertCircle, Cloud, Landmark, Lock, Mail, User2 } from "lucide-react";
 import { cx } from "class-variance-authority";
 import { T } from "@/styles/style";
 import next from "next";
@@ -118,7 +118,7 @@ export default function LoginPage() {
   });
 
   async function routeAfterSignIn() {
-    const session = await fetchAuthSession();
+    const session = await fetchAuthSession({ forceRefresh: true });
 
     const idPayload = session.tokens?.idToken?.payload;
     const accessPayload = session.tokens?.accessToken?.payload;
@@ -129,12 +129,13 @@ export default function LoginPage() {
       [];
 
     if (
-      groups.includes("Admins") ||
+      groups.includes("Admin") ||
       groups.includes("Researcher") ||
       groups.includes("Developer") ||
       groups.includes("Ecologist")
     ) {
       router.replace("/dashboard");
+      return;
     }
     router.replace("/unauthorized");
   }
@@ -314,14 +315,14 @@ export default function LoginPage() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock size={16} className="opacity-60" />
+                    <User2 size={16} className="opacity-60" />
                   </div>
                   <InputLogin
                     id="fullName"
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder="John Doe"
                     disabled={loading}
                     required
                   />
