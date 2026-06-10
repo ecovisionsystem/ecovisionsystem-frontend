@@ -20,7 +20,7 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
-  role: "ecologist" | "researcher" | "developer" | "admin";
+  role: "ecologist" | "researcher" | "developer" | "Developer" | "admin";
   institution?: string;
   avatar?: string;
 }
