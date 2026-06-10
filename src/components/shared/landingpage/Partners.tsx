@@ -2,10 +2,7 @@ import React from "react";
 
 export default function Partners() {
   return (
-    <section
-      className="py-16 bg-brand-primary border-b border-outline-variant"
-      id="partners"
-    >
+    <section className="py-16 bg-brand-primary" id="partners">
       <div className="max-w-max-content mx-auto px-gutter text-center">
         <h3 className="text-label-xs font-label-xs text-white uppercase tracking-widest mb-8">
           Developed in Partnership With
