@@ -1,17 +1,17 @@
 "use client";
 
-import React from "react";
-import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProjectCreateModal } from "@/components/projects/project-create-modal";
 import { Plus } from "lucide-react";
 
 export default function DashboardPage() {
-  const router = useRouter();
   const { user, isLoading, requireAuth, signOut } = useAuth();
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
 
   requireAuth();
 
@@ -41,9 +41,9 @@ export default function DashboardPage() {
         title="Dashboard"
         breadcrumbs={[{ label: "Dashboard" }]}
         action={
-          <Button onClick={() => router.push("/upload")}>
+          <Button onClick={() => setProjectModalOpen(true)}>
             <Plus className="h-4 w-4" />
-            New Upload
+            New Project
           </Button>
         }
       />
@@ -77,6 +77,10 @@ export default function DashboardPage() {
           </div>
         </Card>
       </div>
+      <ProjectCreateModal
+        open={projectModalOpen}
+        onOpenChange={setProjectModalOpen}
+      />
     </AppShell>
   );
 }

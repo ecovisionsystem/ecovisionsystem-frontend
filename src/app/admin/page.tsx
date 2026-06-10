@@ -20,7 +20,11 @@ export default function AdminPage() {
   };
 
   // Check if user has admin access
-  if (!isLoading && user && !["admin", "developer"].includes(user.role)) {
+  if (
+    !isLoading &&
+    user &&
+    !["admin", "developer", "Developer"].includes(user.role)
+  ) {
     return (
       <AppShell user={user} onSignOut={handleSignOut}>
         <PageHeader title="Admin" breadcrumbs={[{ label: "Admin" }]} />
