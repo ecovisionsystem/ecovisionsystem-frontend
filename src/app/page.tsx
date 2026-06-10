@@ -5,6 +5,12 @@ import Hero from "@/components/shared/landingpage/Hero";
 import Features from "@/components/shared/landingpage/Features";
 import Architecture from "@/components/shared/landingpage/Architecture";
 import Partners from "@/components/shared/landingpage/Partners";
+import LandingComparisonSections from "@/components/shared/landingpage/comparison/LandingComparisonSections";
+import LandingComparisonV2Sections from "@/components/shared/landingpage/comparison-v2/LandingComparisonV2Sections";
+import ProblemSection from "@/components/shared/landingpage/ProblemSection";
+import Platform from "@/components/shared/landingpage/Platform";
+import Science from "@/components/shared/landingpage/Science";
+import StatsLandn from "@/components/shared/landingpage/Stats";
 import Footer from "@/components/shared/landingpage/Footer";
 
 export default function HomePage() {
@@ -14,8 +20,13 @@ export default function HomePage() {
         <Header />
         <main className="flex-grow">
           <Hero />
-          <Features />
-          <Architecture />
+          <ProblemSection />
+          <Platform />
+          <Science />
+          <StatsLandn />
+          {/* <Features /> */}
+          {/* <Architecture /> */}
+          <LandingComparisonSections />
           <Partners />
         </main>
         <Footer />
