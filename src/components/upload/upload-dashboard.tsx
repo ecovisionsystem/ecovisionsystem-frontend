@@ -29,7 +29,7 @@ interface UploadDashboardProps {
 }
 
 export function UploadDashboard({
-  projectId = "legacy-upload",
+  projectId,
   projectName,
   projectPurpose,
   initialUploadedFiles,
@@ -55,8 +55,10 @@ export function UploadDashboard({
     [],
   );
 
+  const hasProjectContext = Boolean(projectId);
+
   const refreshProjectUploads = useCallback(async () => {
-    if (projectId === "legacy-upload" || !accessToken) return;
+    if (!projectId || !accessToken) return;
 
     try {
       const uploads = await listProjectUploads(projectId, accessToken);
@@ -123,13 +125,29 @@ export function UploadDashboard({
     [updateFile],
   );
 
+  const startUpload = useCallback(
+    async (file: UploadQueueFile) => {
+      if (!hasProjectContext) {
+        updateFile(file.clientUploadId, {
+          status: "failed",
+          errorMessage:
+            "Open or create a project before uploading to S3. The legacy upload page is preview-only.",
+        });
+        return;
+      }
+
+      await uploadController.start(file);
+    },
+    [hasProjectContext, updateFile, uploadController],
+  );
+
   const activeFile = useMemo(
     () => files.find((file) => file.id === selectedId),
     [files, selectedId],
   );
 
   const uploadedFiles = files.filter((file) => file.status === "uploaded");
-  const showProjectGallery = projectId !== "legacy-upload" || Boolean(projectName);
+  const showProjectGallery = hasProjectContext || Boolean(projectName);
 
   return (
     <div className="relative p-6">
@@ -192,7 +210,7 @@ export function UploadDashboard({
             <FileDetail
               file={activeFile}
               onMetadataChange={updateMetadata}
-              onStart={uploadController.start}
+              onStart={startUpload}
               onRetry={uploadController.retry}
               onRemove={removeFile}
             />

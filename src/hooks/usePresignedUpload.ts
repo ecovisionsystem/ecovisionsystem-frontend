@@ -52,6 +52,15 @@ export function usePresignedUpload({
         return;
       }
 
+      if (!accessToken) {
+        onUpdate(file.clientUploadId, {
+          status: "failed",
+          errorMessage: "You must be signed in before uploading files.",
+          canResume: false,
+        });
+        return;
+      }
+
       try {
         onUpdate(file.clientUploadId, {
           status: "registering",
@@ -107,6 +116,7 @@ export function usePresignedUpload({
             requestsRef.current.set(file.clientUploadId, request);
           },
         });
+        requestsRef.current.delete(file.clientUploadId);
 
         const completeResponse = await completeUpload(
           presign.uploadId,
@@ -127,7 +137,6 @@ export function usePresignedUpload({
           canResume: false,
         });
 
-        requestsRef.current.delete(file.clientUploadId);
         onUploaded?.(file, completeResponse);
       } catch (error) {
         requestsRef.current.delete(file.clientUploadId);
@@ -234,7 +243,12 @@ function putToS3({
     };
 
     request.onerror = () => reject(new Error("S3 upload failed."));
-    request.onabort = () => reject(new Error("S3 upload was cancelled."));
+    request.onabort = () =>
+      reject(
+        new Error(
+          "S3 upload was cancelled. Presigned PUT uploads cannot resume; retry will request a new upload URL.",
+        ),
+      );
 
     request.open(presign.method || "PUT", presign.uploadUrl);
     if (file.contentType) {
