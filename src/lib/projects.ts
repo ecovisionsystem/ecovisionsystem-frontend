@@ -1,5 +1,7 @@
 "use client";
 
+import { getOptionalApiBaseUrl } from "@/lib/api-config";
+
 export type ProjectPurpose =
   | "run_inference"
   | "training_repository"
@@ -94,11 +96,11 @@ async function tryApiProject<T>(
   init: RequestInit,
   accessToken?: string,
 ): Promise<T | null> {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const apiBaseUrl = getOptionalApiBaseUrl();
   if (!apiBaseUrl || !accessToken) return null;
 
   try {
-    const response = await fetch(`${apiBaseUrl.replace(/\/$/, "")}${path}`, {
+    const response = await fetch(`${apiBaseUrl}${path}`, {
       ...init,
       headers: {
         "Content-Type": "application/json",
