@@ -6,6 +6,7 @@ import type {
   PresignUploadResponse,
   ProjectUpload,
 } from "@/components/upload/upload-types";
+import { getApiBaseUrl } from "@/lib/api-config";
 
 const API_PREFIX = "/api/v1";
 
@@ -68,17 +69,14 @@ async function apiRequest<T>(
   path: string,
   init: RequestInit & { accessToken?: string } = {},
 ): Promise<T> {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-  if (!apiBaseUrl) {
-    throw new Error("NEXT_PUBLIC_API_BASE_URL is not configured.");
-  }
+  const apiBaseUrl = getApiBaseUrl();
   if (!init.accessToken) {
     throw new Error("You must be signed in before uploading files.");
   }
 
   const { accessToken, headers, ...requestInit } = init;
   const response = await fetch(
-    `${apiBaseUrl.replace(/\/$/, "")}${API_PREFIX}${path}`,
+    `${apiBaseUrl}${API_PREFIX}${path}`,
     {
       ...requestInit,
       headers: {
