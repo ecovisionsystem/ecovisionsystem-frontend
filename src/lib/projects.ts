@@ -1,6 +1,9 @@
 "use client";
 
-export type ProjectPurpose = "run_inference" | "training_repository" | "request";
+export type ProjectPurpose =
+  | "run_inference"
+  | "training_repository"
+  | "request";
 
 export interface Project {
   id: string;
@@ -75,7 +78,9 @@ export async function getProject(projectId: string, accessToken?: string) {
     saveLocalProject(apiProject);
     return apiProject;
   }
-  return readLocalProjects().find((project) => project.id === projectId) || null;
+  return (
+    readLocalProjects().find((project) => project.id === projectId) || null
+  );
 }
 
 function createProjectId() {
@@ -89,7 +94,7 @@ async function tryApiProject<T>(
   init: RequestInit,
   accessToken?: string,
 ): Promise<T | null> {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
   if (!apiBaseUrl || !accessToken) return null;
 
   try {

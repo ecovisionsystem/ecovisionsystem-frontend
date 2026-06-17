@@ -68,9 +68,9 @@ async function apiRequest<T>(
   path: string,
   init: RequestInit & { accessToken?: string } = {},
 ): Promise<T> {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
   if (!apiBaseUrl) {
-    throw new Error("NEXT_PUBLIC_API_URL is not configured.");
+    throw new Error("NEXT_PUBLIC_API_BASE_URL is not configured.");
   }
   if (!init.accessToken) {
     throw new Error("You must be signed in before uploading files.");
