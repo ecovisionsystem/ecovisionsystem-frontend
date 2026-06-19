@@ -19,3 +19,8 @@ export function getOptionalApiBaseUrl() {
 
   return apiBaseUrl ? apiBaseUrl.replace(/\/$/, "") : null;
 }
+
+export function getApiAuthToken(accessToken?: string, idToken?: string) {
+  const tokenType = process.env.NEXT_PUBLIC_API_AUTH_TOKEN_TYPE;
+  return tokenType === "access" ? accessToken : idToken;
+}

@@ -29,7 +29,7 @@ export function ProjectCreateModal({
   cancelHref,
 }: ProjectCreateModalProps) {
   const router = useRouter();
-  const { accessToken } = useAuth();
+  const { apiToken } = useAuth();
   const [name, setName] = useState("");
   const [purpose, setPurpose] = useState<ProjectPurpose>("run_inference");
   const [isCreating, setIsCreating] = useState(false);
@@ -55,7 +55,7 @@ export function ProjectCreateModal({
     try {
       const project = await createProject(
         { name: name.trim(), purpose },
-        accessToken,
+        apiToken,
       );
       onOpenChange(false);
       setName("");

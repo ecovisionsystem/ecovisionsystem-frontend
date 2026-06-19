@@ -34,7 +34,7 @@ export function UploadDashboard({
   projectPurpose,
   initialUploadedFiles,
 }: UploadDashboardProps) {
-  const { accessToken } = useAuth();
+  const { apiToken } = useAuth();
   const initialFiles = initialUploadedFiles ?? demoUploadFiles;
   const previewUrlsRef = useRef<Set<string>>(new Set());
   const [files, setFiles] = useState<UploadQueueFile[]>(
@@ -58,20 +58,20 @@ export function UploadDashboard({
   const hasProjectContext = Boolean(projectId);
 
   const refreshProjectUploads = useCallback(async () => {
-    if (!projectId || !accessToken) return;
+    if (!projectId || !apiToken) return;
 
     try {
-      const uploads = await listProjectUploads(projectId, accessToken);
+      const uploads = await listProjectUploads(projectId, apiToken);
       setFiles((current) => mergeProjectUploads(current, uploads, projectId));
     } catch (error) {
       console.error("Failed to load project uploads:", error);
     }
-  }, [accessToken, projectId]);
+  }, [apiToken, projectId]);
 
   const uploadController = usePresignedUpload({
     projectId,
     projectPurpose,
-    accessToken,
+    accessToken: apiToken,
     onUpdate: updateFile,
     onUploaded: refreshProjectUploads,
   });

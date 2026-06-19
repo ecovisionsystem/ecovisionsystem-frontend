@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
+import { getApiAuthToken } from "@/lib/api-config";
 import type { AuthUser } from "@/types";
 
 export function useAuth() {
@@ -19,6 +20,7 @@ export function useAuth() {
   } = useAuthStore();
 
   const router = useRouter();
+  const apiToken = getApiAuthToken(accessToken, idToken);
 
   const hasRole = (role: AuthUser["role"] | AuthUser["role"][]) => {
     if (!user) return false;
@@ -46,6 +48,7 @@ export function useAuth() {
     claims,
     accessToken,
     idToken,
+    apiToken,
     expiresAt,
     isAuthenticated,
     isLoading,

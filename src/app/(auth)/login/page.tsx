@@ -10,7 +10,6 @@ import { signIn, fetchAuthSession, confirmSignIn } from "aws-amplify/auth";
 import { AlertCircle, Cloud, Landmark, Lock, Mail, User2 } from "lucide-react";
 import { cx } from "class-variance-authority";
 import { T } from "@/styles/style";
-import next from "next";
 
 function useLoaded() {
   const [loaded, setLoaded] = React.useState(false);
@@ -203,18 +202,26 @@ export default function LoginPage() {
       }
 
       setError(`Unsupported sign-in step: ${nextStage}`);
-    } catch (err: {} | any) {
-      const message = err?.message ?? "Sign in failed. Please try again.";
+    } catch (err: unknown) {
+      const authError = err as { name?: string; message?: string };
+      const message = authError.message ?? "Sign in failed. Please try again.";
 
       if (
         message.includes("already a signed in user") ||
         message.includes("There is already a signed in user")
       ) {
-      }
-      {
         await routeAfterSignIn();
         return;
       }
+
+      if (
+        authError.name === "NotAuthorizedException" ||
+        authError.name === "UserNotFoundException"
+      ) {
+        setError("Incorrect email or password.");
+        return;
+      }
+
       setError(message);
     } finally {
       setLoading(false);
