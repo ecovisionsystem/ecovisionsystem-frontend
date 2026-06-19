@@ -14,7 +14,7 @@ import {
 export default function ProjectWorkspacePage() {
   const params = useParams();
   const projectId = params.projectId as string;
-  const { user, accessToken, isLoading, requireAuth, signOut } = useAuth();
+  const { user, apiToken, isLoading, requireAuth, signOut } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -22,12 +22,12 @@ export default function ProjectWorkspacePage() {
 
   useEffect(() => {
     if (!isLoading && user && projectId) {
-      getProject(projectId, accessToken).then((nextProject) => {
+      getProject(projectId, apiToken).then((nextProject) => {
         setProject(nextProject);
         setLoaded(true);
       });
     }
-  }, [accessToken, isLoading, projectId, user]);
+  }, [apiToken, isLoading, projectId, user]);
 
   if (isLoading || !loaded) {
     return (

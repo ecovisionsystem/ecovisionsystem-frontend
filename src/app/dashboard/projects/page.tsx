@@ -15,7 +15,7 @@ import {
 } from "@/lib/projects";
 
 export default function ProjectsPage() {
-  const { user, accessToken, isLoading, requireAuth, signOut } = useAuth();
+  const { user, apiToken, isLoading, requireAuth, signOut } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -23,9 +23,9 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     if (!isLoading && user) {
-      listProjects(accessToken).then(setProjects);
+      listProjects(apiToken).then(setProjects);
     }
-  }, [accessToken, isLoading, user]);
+  }, [apiToken, isLoading, user]);
 
   if (isLoading) {
     return (
@@ -89,4 +89,3 @@ export default function ProjectsPage() {
     </AppShell>
   );
 }
-
