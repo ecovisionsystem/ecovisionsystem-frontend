@@ -20,7 +20,7 @@ export function useAuth() {
   } = useAuthStore();
 
   const router = useRouter();
-  const apiToken = getApiAuthToken(accessToken, idToken);
+  const apiToken = getApiAuthToken(accessToken);
 
   const hasRole = (role: AuthUser["role"] | AuthUser["role"][]) => {
     if (!user) return false;
