@@ -295,9 +295,9 @@ function InferenceTab({
         <SectionLabel>Model Configuration</SectionLabel>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {[
-            ["Inference Type", "vegetation_segmentation"],
+            ["Inference Type", "Select after upload"],
             ["Registration", file.uploadId ? "Registered" : "Pending upload"],
-            ["Job", file.jobId || "Created by backend"],
+            ["Job", file.jobId || "Not started"],
             ["Delivery", "Aurora + S3 signed URL"],
           ].map(([key, value]) => (
             <div
@@ -424,7 +424,7 @@ function InferenceTab({
         {running
           ? `Previewing inference... ${progress.toFixed(0)}%`
           : isUploaded
-            ? "Preview Inference Stages"
+            ? "Select Model / Preview Stages"
             : "Upload required first"}
       </button>
 

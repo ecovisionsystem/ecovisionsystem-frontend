@@ -27,7 +27,6 @@ interface UploadDashboardProps {
 export function UploadDashboard({
   projectId,
   projectName,
-  projectPurpose,
   initialUploadedFiles,
 }: UploadDashboardProps) {
   const { apiToken } = useAuth();
@@ -66,7 +65,6 @@ export function UploadDashboard({
 
   const uploadController = usePresignedUpload({
     projectId,
-    projectPurpose,
     accessToken: apiToken,
     onUpdate: updateFile,
     onUploaded: refreshProjectUploads,
@@ -482,7 +480,7 @@ function normalizeUploadStatus(status: string): UploadStatus {
   ) {
     return status;
   }
-  return status === "complete" ? "uploaded" : "ready";
+  return status === "complete" || status === "completed" ? "uploaded" : "ready";
 }
 
 function inferContentType(filename: string) {
