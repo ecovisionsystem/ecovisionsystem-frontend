@@ -66,10 +66,11 @@ export function usePresignedUpload({
           canResume: false,
         });
 
+        const contentType = file.contentType || "application/octet-stream";
         const presign = await presignUpload(
           {
             filename: file.name,
-            contentType: file.contentType || "application/octet-stream",
+            contentType,
             fileSize: file.size,
             projectId: activeProjectId,
             metadata: { ...file.metadata },
@@ -95,6 +96,7 @@ export function usePresignedUpload({
         await putToS3({
           file,
           presign,
+          contentType,
           onProgress: (progress) => {
             onUpdate(file.clientUploadId, {
               status: "uploading",
@@ -193,11 +195,13 @@ export function usePresignedUpload({
 function putToS3({
   file,
   presign,
+  contentType,
   onProgress,
   onRequest,
 }: {
   file: UploadQueueFile;
   presign: PresignUploadResponse;
+  contentType: string;
   onProgress: (progress: number) => void;
   onRequest: (request: XMLHttpRequest) => void;
 }) {
@@ -236,9 +240,7 @@ function putToS3({
       );
 
     request.open(presign.method || "PUT", presign.uploadUrl);
-    if (file.contentType) {
-      request.setRequestHeader("Content-Type", file.contentType);
-    }
+    request.setRequestHeader("Content-Type", contentType);
     request.send(file.file);
   });
 }
