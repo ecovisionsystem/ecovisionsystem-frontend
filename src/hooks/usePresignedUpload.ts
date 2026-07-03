@@ -2,7 +2,6 @@
 
 import { useCallback, useRef } from "react";
 import { completeUpload, presignUpload } from "@/lib/uploads";
-import type { ProjectPurpose } from "@/lib/projects";
 import type {
   CompleteUploadResponse,
   PresignUploadResponse,
@@ -11,7 +10,6 @@ import type {
 
 interface UsePresignedUploadOptions {
   projectId?: string;
-  projectPurpose?: ProjectPurpose;
   accessToken?: string;
   onUpdate: (
     clientUploadId: string,
@@ -25,7 +23,6 @@ interface UsePresignedUploadOptions {
 
 export function usePresignedUpload({
   projectId,
-  projectPurpose,
   accessToken,
   onUpdate,
   onUploaded,
@@ -75,10 +72,6 @@ export function usePresignedUpload({
             contentType: file.contentType || "application/octet-stream",
             fileSize: file.size,
             projectId: activeProjectId,
-            inferenceType:
-              projectPurpose === "inference"
-                ? "vegetation_segmentation"
-                : undefined,
             metadata: { ...file.metadata },
           },
           accessToken,
@@ -140,7 +133,7 @@ export function usePresignedUpload({
         });
       }
     },
-    [accessToken, onUpdate, onUploaded, projectId, projectPurpose],
+    [accessToken, onUpdate, onUploaded, projectId],
   );
 
   const retry = useCallback(
