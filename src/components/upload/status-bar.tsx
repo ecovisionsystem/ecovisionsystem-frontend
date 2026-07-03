@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { uploadTheme as T } from "./upload-demo-data";
+import { uploadTheme as T } from "./upload-utils";
 import type { UploadQueueFile } from "./upload-types";
 
 interface StatusBarProps {

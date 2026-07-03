@@ -1,109 +1,53 @@
 "use client";
 
-import type {
-  CompleteUploadResponse,
-  PresignUploadRequest,
-  PresignUploadResponse,
-  ProjectUpload,
-} from "@/components/upload/upload-types";
-import { getApiBaseUrl } from "@/lib/api-config";
+import { apiRequest, type Page } from "@/lib/api-client";
 
-const API_PREFIX = "/api/v1";
-
-export async function presignUpload(
-  input: PresignUploadRequest,
-  accessToken?: string,
-) {
-  return apiRequest<PresignUploadResponse>("/uploads/presign", {
-    accessToken,
-    method: "POST",
-    body: JSON.stringify(input),
-  });
+export interface UploadResource {
+  id: string;
+  projectId: string;
+  filename: string;
+  status: string;
+  fileSize: number;
+  contentType: string;
+  createdAt: string;
+  completedAt: string | null;
+  jobId: string | null;
+  jobStatus: string | null;
 }
 
-export async function completeUpload(uploadId: string, accessToken?: string) {
-  return apiRequest<CompleteUploadResponse>(
-    `/uploads/${encodeURIComponent(uploadId)}/complete`,
-    {
-      accessToken,
-      method: "POST",
-    },
-  );
+export interface PresignInput {
+  filename: string;
+  contentType: string;
+  fileSize: number;
+  projectId: string;
+  inferenceType?: string;
+  checksumSha256?: string;
+  metadata?: Record<string, unknown>;
 }
 
-export async function getUploadStatus(uploadId: string, accessToken?: string) {
-  return apiRequest<ProjectUpload>(`/uploads/${encodeURIComponent(uploadId)}`, {
-    accessToken,
-  });
+export interface PresignResponse {
+  upload: UploadResource;
+  uploadUrl: string;
+  method: "PUT";
+  expiresAt: string;
 }
 
-export async function listProjectUploads(
-  projectId: string,
-  accessToken?: string,
-) {
-  return apiRequest<ProjectUpload[]>(
-    `/projects/${encodeURIComponent(projectId)}/uploads`,
-    {
-      accessToken,
-    },
-  );
+export const presignUpload = (input: PresignInput, token?: string) =>
+  apiRequest<PresignResponse>("/uploads/presign", token, { method: "POST", body: JSON.stringify(input) });
+
+export const completeUpload = (uploadId: string, token?: string) =>
+  apiRequest<UploadResource>(`/uploads/${encodeURIComponent(uploadId)}/complete`, token, { method: "POST" });
+
+export const getUploadStatus = (uploadId: string, token?: string) =>
+  apiRequest<UploadResource>(`/uploads/${encodeURIComponent(uploadId)}`, token);
+
+export async function listProjectUploads(projectId: string, token?: string) {
+  return (await apiRequest<Page<UploadResource>>(`/projects/${encodeURIComponent(projectId)}/uploads`, token)).items;
 }
 
-export async function listProjectJobs(projectId: string, accessToken?: string) {
-  return apiRequest(`/projects/${encodeURIComponent(projectId)}/jobs`, {
-    accessToken,
-  });
+export async function listProjectJobs(projectId: string, token?: string) {
+  return (await apiRequest<Page<unknown>>(`/projects/${encodeURIComponent(projectId)}/jobs`, token)).items;
 }
 
-export async function getJobStatus(jobId: string, accessToken?: string) {
-  return apiRequest(`/jobs/${encodeURIComponent(jobId)}`, {
-    accessToken,
-  });
-}
-
-export async function listInferenceTypes(accessToken?: string) {
-  return apiRequest("/inference-types", { accessToken });
-}
-
-async function apiRequest<T>(
-  path: string,
-  init: RequestInit & { accessToken?: string } = {},
-): Promise<T> {
-  const apiBaseUrl = getApiBaseUrl();
-  if (!init.accessToken) {
-    throw new Error("You must be signed in before uploading files.");
-  }
-
-  const { accessToken, headers, ...requestInit } = init;
-  const response = await fetch(
-    `${apiBaseUrl}${API_PREFIX}${path}`,
-    {
-      ...requestInit,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-        ...headers,
-      },
-    },
-  );
-
-  if (!response.ok) {
-    const message = await readErrorMessage(response);
-    throw new Error(message || response.statusText || "Request failed.");
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return (await response.json()) as T;
-}
-
-async function readErrorMessage(response: Response) {
-  try {
-    const data = await response.json();
-    return data?.message || data?.detail || data?.error;
-  } catch {
-    return response.statusText;
-  }
-}
+export const getJobStatus = (jobId: string, token?: string) =>
+  apiRequest(`/jobs/${encodeURIComponent(jobId)}`, token);

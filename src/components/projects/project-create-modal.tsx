@@ -18,7 +18,7 @@ interface ProjectCreateModalProps {
 }
 
 const purposeOptions: ProjectPurpose[] = [
-  "run_inference",
+  "inference",
   "training_repository",
   "request",
 ];
@@ -31,7 +31,7 @@ export function ProjectCreateModal({
   const router = useRouter();
   const { apiToken } = useAuth();
   const [name, setName] = useState("");
-  const [purpose, setPurpose] = useState<ProjectPurpose>("run_inference");
+  const [purpose, setPurpose] = useState<ProjectPurpose>("inference");
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
 
@@ -59,7 +59,7 @@ export function ProjectCreateModal({
       );
       onOpenChange(false);
       setName("");
-      setPurpose("run_inference");
+      setPurpose("inference");
       router.push(`/dashboard/projects/${project.id}`);
     } catch (err) {
       setError(

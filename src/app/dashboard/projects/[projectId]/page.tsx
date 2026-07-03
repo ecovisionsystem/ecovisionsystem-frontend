@@ -17,15 +17,23 @@ export default function ProjectWorkspacePage() {
   const { user, apiToken, isLoading, requireAuth, signOut } = useAuth();
   const [project, setProject] = useState<Project | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState("");
 
   requireAuth();
 
   useEffect(() => {
     if (!isLoading && user && projectId) {
-      getProject(projectId, apiToken).then((nextProject) => {
-        setProject(nextProject);
-        setLoaded(true);
-      });
+      setError("");
+      getProject(projectId, apiToken)
+        .then(setProject)
+        .catch((reason: unknown) => {
+          setError(
+            reason instanceof Error
+              ? reason.message
+              : "Unable to load this project.",
+          );
+        })
+        .finally(() => setLoaded(true));
     }
   }, [apiToken, isLoading, projectId, user]);
 
@@ -39,6 +47,21 @@ export default function ProjectWorkspacePage() {
 
   if (!user) return null;
 
+  if (error) {
+    return (
+      <AppShell user={user} onSignOut={signOut}>
+        <PageHeader
+          title="Project unavailable"
+          breadcrumbs={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Projects", href: "/dashboard/projects" },
+          ]}
+        />
+        <div className="p-6 text-sm text-red-700">{error}</div>
+      </AppShell>
+    );
+  }
+
   const projectName = project?.name || "Untitled project";
 
   return (
@@ -48,7 +71,7 @@ export default function ProjectWorkspacePage() {
         description={
           project
             ? projectPurposeLabels[project.purpose]
-            : "Local project workspace"
+            : "Project workspace"
         }
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
