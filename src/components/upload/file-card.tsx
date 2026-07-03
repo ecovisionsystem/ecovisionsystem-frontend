@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { FileImage, X } from "lucide-react";
-import { formatBytes, statusMeta, uploadTheme as T } from "./upload-demo-data";
+import { formatBytes, statusMeta, uploadTheme as T } from "./upload-utils";
 import type { UploadQueueFile } from "./upload-types";
 
 interface FileCardProps {

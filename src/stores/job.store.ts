@@ -1,6 +1,4 @@
 import { create } from "zustand";
-import type { InferenceJob } from "@/types";
-
 interface JobStore {
   selectedJobId: string | null;
   jobFilters: {

@@ -18,12 +18,22 @@ export default function ProjectsPage() {
   const { user, apiToken, isLoading, requireAuth, signOut } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [error, setError] = useState("");
 
   requireAuth();
 
   useEffect(() => {
     if (!isLoading && user) {
-      listProjects(apiToken).then(setProjects);
+      setError("");
+      listProjects(apiToken)
+        .then(setProjects)
+        .catch((reason: unknown) => {
+          setError(
+            reason instanceof Error
+              ? reason.message
+              : "Unable to load projects.",
+          );
+        });
     }
   }, [apiToken, isLoading, user]);
 
@@ -53,7 +63,14 @@ export default function ProjectsPage() {
         }
       />
       <div className="p-6">
-        {projects.length === 0 ? (
+        {error ? (
+          <Card className="border-red-200 bg-red-50 text-center">
+            <h2 className="text-lg font-semibold text-red-900">
+              Projects are temporarily unavailable
+            </h2>
+            <p className="mt-2 text-sm text-red-700">{error}</p>
+          </Card>
+        ) : projects.length === 0 ? (
           <Card className="text-center">
             <h2 className="text-lg font-semibold text-text-primary">
               No projects yet

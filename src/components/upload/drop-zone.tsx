@@ -2,7 +2,7 @@
 
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { UploadCloud } from "lucide-react";
-import { uploadTheme as T } from "./upload-demo-data";
+import { uploadTheme as T } from "./upload-utils";
 
 interface DropZoneProps {
   onFiles: (files: File[]) => void;

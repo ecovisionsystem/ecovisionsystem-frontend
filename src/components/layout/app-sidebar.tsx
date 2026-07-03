@@ -43,7 +43,7 @@ const navItems: NavItem[] = [
     href: "/admin",
     label: "Admin",
     icon: ShieldCheck,
-    roles: ["admin", "developer", "Developer"],
+    roles: ["admin"],
   },
 ];
 

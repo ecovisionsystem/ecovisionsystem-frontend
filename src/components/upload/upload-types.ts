@@ -18,44 +18,7 @@ export interface UploadMetadata {
   notes?: string;
 }
 
-export interface PresignUploadRequest {
-  filename: string;
-  contentType: string;
-  fileSize: number;
-  projectId: string;
-  inferenceType?: string;
-}
-
-export interface PresignUploadResponse {
-  uploadId: string;
-  jobId: string | null;
-  s3Bucket: string;
-  s3Key: string;
-  objectRef?: string;
-  uploadUrl: string;
-  method: "PUT";
-  expiresIn: number;
-  status: "ready";
-}
-
-export interface CompleteUploadResponse {
-  uploadId: string;
-  status: "uploaded" | string;
-  jobId: string | null;
-  jobStatus?: string;
-  s3Bucket: string;
-  s3Key: string;
-}
-
-export interface ProjectUpload {
-  uploadId: string;
-  filename: string;
-  status: UploadStatus | string;
-  s3Bucket: string;
-  s3Key: string;
-  objectRef: string;
-  jobId: string | null;
-}
+export type { PresignInput as PresignUploadRequest, PresignResponse as PresignUploadResponse, UploadResource as CompleteUploadResponse, UploadResource as ProjectUpload } from "@/lib/uploads";
 
 export interface UploadQueueFile {
   id: string;
@@ -66,13 +29,10 @@ export interface UploadQueueFile {
   jobId?: string;
   uploadUrl?: string;
   previewUrl?: string;
-  s3Bucket?: string;
-  s3Key?: string;
-  objectRef?: string;
   metadata: UploadMetadata;
   errorMessage?: string;
   canResume: boolean;
-  source?: "local" | "backend" | "demo";
+  source?: "local" | "backend";
   name: string;
   size: number;
   contentType: string;

@@ -76,9 +76,10 @@ export function usePresignedUpload({
             fileSize: file.size,
             projectId: activeProjectId,
             inferenceType:
-              projectPurpose === "run_inference"
+              projectPurpose === "inference"
                 ? "vegetation_segmentation"
                 : undefined,
+            metadata: { ...file.metadata },
           },
           accessToken,
         );
@@ -87,12 +88,8 @@ export function usePresignedUpload({
 
         onUpdate(file.clientUploadId, {
           status: "ready",
-          uploadId: presign.uploadId,
-          jobId: presign.jobId || undefined,
-          s3Bucket: presign.s3Bucket,
-          s3Key: presign.s3Key,
-          objectRef:
-            presign.objectRef || `s3://${presign.s3Bucket}/${presign.s3Key}`,
+          uploadId: presign.upload.id,
+          jobId: presign.upload.jobId || undefined,
           uploadUrl: presign.uploadUrl,
         });
 
@@ -119,20 +116,15 @@ export function usePresignedUpload({
         requestsRef.current.delete(file.clientUploadId);
 
         const completeResponse = await completeUpload(
-          presign.uploadId,
+          presign.upload.id,
           accessToken,
         );
 
         onUpdate(file.clientUploadId, {
           status: "uploaded",
           progress: 100,
-          uploadId: completeResponse.uploadId,
-          jobId: completeResponse.jobId || presign.jobId || undefined,
-          s3Bucket: completeResponse.s3Bucket,
-          s3Key: completeResponse.s3Key,
-          objectRef:
-            presign.objectRef ||
-            `s3://${completeResponse.s3Bucket}/${completeResponse.s3Key}`,
+          uploadId: completeResponse.id,
+          jobId: completeResponse.jobId || presign.upload.jobId || undefined,
           errorMessage: undefined,
           canResume: false,
         });

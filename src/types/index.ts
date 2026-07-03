@@ -27,24 +27,27 @@ export interface AuthUser {
 
 /* Job Types */
 export type JobStatus =
+  | "pending"
   | "queued"
   | "preprocessing"
   | "inferencing"
-  | "complete"
-  | "failed";
+  | "postprocessing"
+  | "completed"
+  | "failed"
+  | "cancelled";
 
 export interface InferenceJob {
   id: string;
-  filename: string;
+  projectId: string;
+  uploadId: string;
   status: JobStatus;
+  progressPercent: number;
+  inferenceType: string;
+  modelVersion: string;
   createdAt: string;
   updatedAt: string;
-  userId: string;
-  user?: AuthUser;
-  errorCode?: string;
-  errorMessage?: string;
-  metadata?: ImageMetadata;
-  inferenceMetrics?: InferenceMetrics;
+  errorCode: string | null;
+  errorMessage: string | null;
 }
 
 /* Image Types */
@@ -90,16 +93,6 @@ export interface DominanceStats {
   bare_sediment: number;
   water: number;
   coverage_level: "excellent" | "good" | "moderate" | "poor";
-}
-
-export interface InferenceResult {
-  jobId: string;
-  segmentationUrl: string;
-  confidenceMapUrl?: string;
-  dominanceStats: DominanceStats;
-  metadata: ImageMetadata;
-  inferenceMetrics: InferenceMetrics;
-  modelVersion: string;
 }
 
 /* Upload Types */

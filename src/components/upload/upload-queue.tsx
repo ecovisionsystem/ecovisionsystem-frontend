@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Plus } from "lucide-react";
-import { statusMeta, uploadTheme as T } from "./upload-demo-data";
+import { statusMeta, uploadTheme as T } from "./upload-utils";
 import { FileCard } from "./file-card";
 import type { UploadQueueFile } from "./upload-types";
 

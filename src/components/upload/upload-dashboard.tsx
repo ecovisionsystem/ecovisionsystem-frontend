@@ -1,11 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  demoUploadFiles,
-  filesToQueueItems,
-  uploadTheme as T,
-} from "./upload-demo-data";
+import { filesToQueueItems, uploadTheme as T } from "./upload-utils";
 import { DropZone } from "./drop-zone";
 import { FileDetail } from "./file-detail";
 import { StatusBar } from "./status-bar";
@@ -35,7 +31,7 @@ export function UploadDashboard({
   initialUploadedFiles,
 }: UploadDashboardProps) {
   const { apiToken } = useAuth();
-  const initialFiles = initialUploadedFiles ?? demoUploadFiles;
+  const initialFiles = initialUploadedFiles ?? [];
   const previewUrlsRef = useRef<Set<string>>(new Set());
   const [files, setFiles] = useState<UploadQueueFile[]>(
     initialFiles,
@@ -311,11 +307,6 @@ function ProjectImageGallery({
                   <span>{file.metadata.siteName || "Project upload"}</span>
                   <span>GSD {file.metadata.gsd || file.gsd}</span>
                 </div>
-                {file.objectRef && (
-                  <div className="truncate text-[10px]" style={{ fontFamily: T.mono, color: T.moss }}>
-                    {file.objectRef}
-                  </div>
-                )}
               </div>
             </button>
           ))}
@@ -430,9 +421,6 @@ function mergeProjectUploads(
         ...backendFile,
         ...file,
         status: normalizeUploadStatus(backendFile.status),
-        s3Bucket: backendFile.s3Bucket,
-        s3Key: backendFile.s3Key,
-        objectRef: backendFile.objectRef,
         jobId: backendFile.jobId,
         progress: 100,
       });
@@ -459,21 +447,18 @@ function projectUploadToQueueFile(
   const status = normalizeUploadStatus(upload.status);
 
   return {
-    id: upload.uploadId,
-    clientUploadId: upload.uploadId,
+    id: upload.id,
+    clientUploadId: upload.id,
     projectId,
-    uploadId: upload.uploadId,
+    uploadId: upload.id,
     jobId: upload.jobId || undefined,
-    s3Bucket: upload.s3Bucket,
-    s3Key: upload.s3Key,
-    objectRef: upload.objectRef,
     metadata: {},
     errorMessage: undefined,
     canResume: false,
     source: "backend",
     name: upload.filename,
-    size: 0,
-    contentType: inferContentType(upload.filename),
+    size: upload.fileSize,
+    contentType: upload.contentType,
     gsd: "-",
     crs: "-",
     bands: upload.filename.toLowerCase().includes("_ms") ? "MS-5" : "RGB",
