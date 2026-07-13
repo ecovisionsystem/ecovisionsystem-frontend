@@ -82,7 +82,6 @@ export default function ProjectWorkspacePage() {
       <UploadDashboard
         projectId={projectId}
         projectName={projectName}
-        projectPurpose={project?.purpose}
         initialUploadedFiles={[]}
       />
     </AppShell>

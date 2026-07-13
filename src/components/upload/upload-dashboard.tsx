@@ -9,7 +9,6 @@ import { UploadQueue } from "./upload-queue";
 import { useAuth } from "@/hooks/useAuth";
 import { usePresignedUpload } from "@/hooks/usePresignedUpload";
 import { listProjectUploads } from "@/lib/uploads";
-import type { ProjectPurpose } from "@/lib/projects";
 import type {
   ProjectUpload,
   UploadMetadata,
@@ -20,7 +19,6 @@ import type {
 interface UploadDashboardProps {
   projectId?: string;
   projectName?: string;
-  projectPurpose?: ProjectPurpose;
   initialUploadedFiles?: UploadQueueFile[];
 }
 
@@ -472,15 +470,17 @@ function normalizeUploadStatus(status: string): UploadStatus {
   if (
     status === "selected" ||
     status === "registering" ||
+    status === "pending" ||
     status === "ready" ||
     status === "uploading" ||
     status === "paused" ||
     status === "uploaded" ||
-    status === "failed"
+    status === "failed" ||
+    status === "cancelled"
   ) {
     return status;
   }
-  return status === "complete" || status === "completed" ? "uploaded" : "ready";
+  return status === "complete" || status === "completed" ? "uploaded" : "pending";
 }
 
 function inferContentType(filename: string) {

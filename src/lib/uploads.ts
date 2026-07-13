@@ -20,7 +20,6 @@ export interface PresignInput {
   contentType: string;
   fileSize: number;
   projectId: string;
-  inferenceType?: string;
   checksumSha256?: string;
   metadata?: Record<string, unknown>;
 }

@@ -1,11 +1,13 @@
 export type UploadStatus =
   | "selected"
   | "registering"
+  | "pending"
   | "ready"
   | "uploading"
   | "paused"
   | "uploaded"
-  | "failed";
+  | "failed"
+  | "cancelled";
 
 export type UploadTab = "meta" | "inference" | "results";
 

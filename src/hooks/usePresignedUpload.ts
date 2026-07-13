@@ -81,7 +81,7 @@ export function usePresignedUpload({
         presignRef.current.set(file.clientUploadId, presign);
 
         onUpdate(file.clientUploadId, {
-          status: "ready",
+          status: "pending",
           uploadId: presign.upload.id,
           jobId: presign.upload.jobId || undefined,
           uploadUrl: presign.uploadUrl,
