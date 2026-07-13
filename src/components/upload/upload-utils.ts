@@ -5,11 +5,13 @@ export const uploadTheme = { cream: "#F7F5F0", paper: "#F0EDE6", warm: "#E8E3D8"
 export const statusMeta: Record<UploadStatus, { label: string; color: string; bg: string }> = {
   selected: { label: "Selected", color: uploadTheme.muted, bg: "rgba(138,136,120,0.1)" },
   registering: { label: "Registering", color: uploadTheme.amber, bg: "rgba(245,166,35,0.1)" },
+  pending: { label: "Pending", color: uploadTheme.amber, bg: "rgba(245,166,35,0.1)" },
   ready: { label: "Ready", color: uploadTheme.leaf, bg: "rgba(61,122,18,0.1)" },
   uploading: { label: "Uploading", color: uploadTheme.blue, bg: "rgba(74,184,212,0.1)" },
   paused: { label: "Paused", color: uploadTheme.amber, bg: "rgba(245,166,35,0.1)" },
   uploaded: { label: "Uploaded", color: uploadTheme.lime, bg: "rgba(108,192,42,0.1)" },
   failed: { label: "Failed", color: uploadTheme.red, bg: "rgba(232,82,58,0.1)" },
+  cancelled: { label: "Cancelled", color: uploadTheme.red, bg: "rgba(232,82,58,0.1)" },
 };
 
 export const formatBytes = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1048576 ? `${(bytes / 1024).toFixed(1)} KB` : bytes < 1073741824 ? `${(bytes / 1048576).toFixed(1)} MB` : `${(bytes / 1073741824).toFixed(2)} GB`;
