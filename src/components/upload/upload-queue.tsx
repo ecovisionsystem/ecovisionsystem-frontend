@@ -4,7 +4,16 @@ import React from "react";
 import { Plus } from "lucide-react";
 import { statusMeta, uploadTheme as T } from "./upload-utils";
 import { FileCard } from "./file-card";
-import type { UploadQueueFile } from "./upload-types";
+import type { UploadQueueFile, UploadStatus } from "./upload-types";
+
+const queueStatusKeys: UploadStatus[] = [
+  "selected",
+  "registering",
+  "pending",
+  "ready",
+  "uploading",
+  "paused",
+];
 
 interface UploadQueueProps {
   files: UploadQueueFile[];
@@ -29,7 +38,7 @@ export function UploadQueue({
 
   return (
     <aside
-      className="flex h-100 flex-col overflow-hidden rounded-2xl  "
+      className="flex h-[32rem] min-h-0 max-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-2xl lg:h-[680px]"
       style={{ background: T.paper }}
     >
       <div className="shrink-0  px-5 pb-3 pt-4">
@@ -45,33 +54,38 @@ export function UploadQueue({
           </span>
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
-          {Object.entries(statusMeta).map(([key, value]) => (
+          {queueStatusKeys.map((key) => (
             <div key={key} className="flex items-center gap-1">
               <div
                 className="h-1.5 w-1.5 rounded-full"
-                style={{ background: value.color }}
+                style={{ background: statusMeta[key].color }}
               />
               <span
                 className="text-[8px] tracking-wide"
                 style={{ fontFamily: T.mono, color: T.muted }}
               >
-                {value.label}
+                {statusMeta[key].label}
               </span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto p-3">
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-3">
         {files.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 opacity-60">
             <div
               className="h-8 w-8 rounded-lg border"
               style={{ borderColor: T.muted }}
             />
-            <span className="text-xs" style={{ color: T.muted }}>
-              No files yet
-            </span>
+            <div className="text-center">
+              <div className="text-xs" style={{ color: T.muted }}>
+                No current uploads
+              </div>
+              <div className="mt-1 text-[10px]" style={{ color: T.muted }}>
+                Add files to start this session.
+              </div>
+            </div>
           </div>
         ) : (
           files.map((file) => (
