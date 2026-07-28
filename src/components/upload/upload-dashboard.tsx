@@ -33,17 +33,32 @@ export function UploadDashboard({
   const [files, setFiles] = useState<UploadQueueFile[]>(
     initialFiles,
   );
+  const [queuedClientUploadIds, setQueuedClientUploadIds] = useState<
+    Set<string>
+  >(() => new Set());
   const [selectedId, setSelectedId] = useState<string | null>(
     initialFiles[0]?.id ?? null,
   );
 
   const updateFile = useCallback(
     (clientUploadId: string, patch: Partial<UploadQueueFile>) => {
-      setFiles((current) =>
-        current.map((file) =>
+      if (patch.status && isQueueExitStatus(patch.status)) {
+        setQueuedClientUploadIds((current) =>
+          removeQueuedClientUploadId(current, clientUploadId),
+        );
+      }
+
+      setFiles((current) => {
+        if (patch.status && isTerminalUploadStatus(patch.status)) {
+          return current.filter(
+            (file) => file.clientUploadId !== clientUploadId,
+          );
+        }
+
+        return current.map((file) =>
           file.clientUploadId === clientUploadId ? { ...file, ...patch } : file,
-        ),
-      );
+        );
+      });
     },
     [],
   );
@@ -79,6 +94,13 @@ export function UploadDashboard({
     };
   }, []);
 
+  useEffect(() => {
+    setSelectedId((current) => {
+      if (current && files.some((file) => file.id === current)) return current;
+      return files[0]?.id ?? null;
+    });
+  }, [files]);
+
   const addFiles = useCallback((rawFiles: File[]) => {
     const newFiles = filesToQueueItems(rawFiles, projectId).map((file) => ({
       ...file,
@@ -88,6 +110,11 @@ export function UploadDashboard({
       if (file.previewUrl?.startsWith("blob:")) {
         previewUrlsRef.current.add(file.previewUrl);
       }
+    });
+    setQueuedClientUploadIds((current) => {
+      const next = new Set(current);
+      newFiles.forEach((file) => next.add(file.clientUploadId));
+      return next;
     });
     setFiles((current) => [...current, ...newFiles]);
     if (newFiles.length) setSelectedId(newFiles[0].id);
@@ -103,6 +130,14 @@ export function UploadDashboard({
       if (fileToRemove?.previewUrl?.startsWith("blob:")) {
         URL.revokeObjectURL(fileToRemove.previewUrl);
         previewUrlsRef.current.delete(fileToRemove.previewUrl);
+      }
+      if (fileToRemove) {
+        setQueuedClientUploadIds((current) =>
+          removeQueuedClientUploadId(
+            current,
+            fileToRemove.clientUploadId,
+          ),
+        );
       }
       setFiles((current) => current.filter((file) => file.id !== id));
       if (selectedId === id) setSelectedId(nextSelectedId);
@@ -137,6 +172,13 @@ export function UploadDashboard({
     () => files.find((file) => file.id === selectedId),
     [files, selectedId],
   );
+  const queueFiles = useMemo(
+    () =>
+      files.filter((file) =>
+        queuedClientUploadIds.has(file.clientUploadId),
+      ),
+    [files, queuedClientUploadIds],
+  );
 
   const uploadedFiles = files.filter((file) => file.status === "uploaded");
   const showProjectGallery = hasProjectContext || Boolean(projectName);
@@ -155,7 +197,7 @@ export function UploadDashboard({
       <div className="overflow-hidden  " style={{ fontFamily: T.sans }}>
         <div className="grid min-h-[680px] grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_340px]">
           <UploadQueue
-            files={files}
+            files={queueFiles}
             selectedId={selectedId}
             onSelect={setSelectedId}
             onRemove={removeFile}
@@ -216,7 +258,7 @@ export function UploadDashboard({
           onSelect={setSelectedId}
         />
       )}
-      <StatusBar files={files} />
+      <StatusBar files={queueFiles} />
     </div>
   );
 }
@@ -397,8 +439,18 @@ function mergeProjectUploads(
   uploads: ProjectUpload[],
   projectId: string,
 ) {
-  const backendFiles = uploads.map((upload) =>
-    projectUploadToQueueFile(upload, projectId),
+  const terminalUploadIds = new Set(
+    uploads
+      .filter((upload) => isTerminalUploadStatus(upload.status))
+      .map((upload) => upload.id),
+  );
+  const backendFiles = uploads
+    .filter((upload) => !isTerminalUploadStatus(upload.status))
+    .map((upload) => projectUploadToQueueFile(upload, projectId));
+  const activeCurrentFiles = currentFiles.filter(
+    (file) =>
+      !isTerminalUploadStatus(file.status) &&
+      (!file.uploadId || !terminalUploadIds.has(file.uploadId)),
   );
   const backendByUploadId = new Map(
     backendFiles.map((file) => [file.uploadId, file]),
@@ -406,7 +458,7 @@ function mergeProjectUploads(
   const usedUploadIds = new Set<string>();
   const merged: UploadQueueFile[] = [];
 
-  currentFiles.forEach((file) => {
+  activeCurrentFiles.forEach((file) => {
     const backendFile = file.uploadId
       ? backendByUploadId.get(file.uploadId)
       : undefined;
@@ -434,6 +486,24 @@ function mergeProjectUploads(
   });
 
   return merged;
+}
+
+function isTerminalUploadStatus(status: string) {
+  return status === "failed" || status === "cancelled";
+}
+
+function isQueueExitStatus(status: string) {
+  return status === "uploaded" || isTerminalUploadStatus(status);
+}
+
+function removeQueuedClientUploadId(
+  current: Set<string>,
+  clientUploadId: string,
+) {
+  if (!current.has(clientUploadId)) return current;
+  const next = new Set(current);
+  next.delete(clientUploadId);
+  return next;
 }
 
 function projectUploadToQueueFile(

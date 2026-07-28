@@ -96,7 +96,6 @@ export function usePresignedUpload({
         await putToS3({
           file,
           presign,
-          contentType,
           onProgress: (progress) => {
             onUpdate(file.clientUploadId, {
               status: "uploading",
@@ -195,13 +194,11 @@ export function usePresignedUpload({
 function putToS3({
   file,
   presign,
-  contentType,
   onProgress,
   onRequest,
 }: {
   file: UploadQueueFile;
   presign: PresignUploadResponse;
-  contentType: string;
   onProgress: (progress: number) => void;
   onRequest: (request: XMLHttpRequest) => void;
 }) {
@@ -240,7 +237,6 @@ function putToS3({
       );
 
     request.open(presign.method || "PUT", presign.uploadUrl);
-    request.setRequestHeader("Content-Type", contentType);
     request.send(file.file);
   });
 }
