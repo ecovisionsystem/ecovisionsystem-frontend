@@ -5,10 +5,14 @@ import { filesToQueueItems, uploadTheme as T } from "./upload-utils";
 import { DropZone } from "./drop-zone";
 import { FileDetail } from "./file-detail";
 import { StatusBar } from "./status-bar";
+import {
+  UploadImage,
+  type EnsureUploadPreview,
+} from "./upload-image";
 import { UploadQueue } from "./upload-queue";
 import { useAuth } from "@/hooks/useAuth";
 import { usePresignedUpload } from "@/hooks/usePresignedUpload";
-import { listProjectUploads } from "@/lib/uploads";
+import { getUploadPreview, listProjectUploads } from "@/lib/uploads";
 import type {
   ProjectUpload,
   UploadMetadata,
@@ -30,6 +34,7 @@ export function UploadDashboard({
   const { apiToken } = useAuth();
   const initialFiles = initialUploadedFiles ?? [];
   const previewUrlsRef = useRef<Set<string>>(new Set());
+  const previewRequestsRef = useRef<Map<string, Promise<void>>>(new Map());
   const [files, setFiles] = useState<UploadQueueFile[]>(
     initialFiles,
   );
@@ -64,6 +69,32 @@ export function UploadDashboard({
   );
 
   const hasProjectContext = Boolean(projectId);
+
+  const ensureUploadPreview = useCallback<EnsureUploadPreview>(
+    async (file, force = false) => {
+      if (file.previewUrl?.startsWith("blob:")) return;
+      if (!force && hasFreshPreview(file)) return;
+      if (!file.uploadId || file.status !== "uploaded") return;
+      if (!apiToken) throw new Error("You must be signed in.");
+
+      const existingRequest = previewRequestsRef.current.get(file.uploadId);
+      if (existingRequest) return existingRequest;
+
+      const request = getUploadPreview(file.uploadId, apiToken)
+        .then((preview) => {
+          updateFile(file.clientUploadId, {
+            previewUrl: preview.previewUrl,
+            previewExpiresAt: preview.expiresAt,
+          });
+        })
+        .finally(() => {
+          previewRequestsRef.current.delete(file.uploadId as string);
+        });
+      previewRequestsRef.current.set(file.uploadId, request);
+      return request;
+    },
+    [apiToken, updateFile],
+  );
 
   const refreshProjectUploads = useCallback(async () => {
     if (!projectId || !apiToken) return;
@@ -237,7 +268,10 @@ export function UploadDashboard({
               ))}
             </div>
 
-            <SelectedPreview file={activeFile} />
+            <SelectedPreview
+              file={activeFile}
+              onPreviewNeeded={ensureUploadPreview}
+            />
           </main>
 
           <div style={{ borderColor: T.border }}>
@@ -247,6 +281,7 @@ export function UploadDashboard({
               onStart={startUpload}
               onRetry={uploadController.retry}
               onRemove={removeFile}
+              onPreviewNeeded={ensureUploadPreview}
             />
           </div>
         </div>
@@ -256,6 +291,7 @@ export function UploadDashboard({
           files={uploadedFiles}
           selectedId={selectedId}
           onSelect={setSelectedId}
+          onPreviewNeeded={ensureUploadPreview}
         />
       )}
       <StatusBar files={queueFiles} />
@@ -263,7 +299,13 @@ export function UploadDashboard({
   );
 }
 
-function SelectedPreview({ file }: { file?: UploadQueueFile }) {
+function SelectedPreview({
+  file,
+  onPreviewNeeded,
+}: {
+  file?: UploadQueueFile;
+  onPreviewNeeded: EnsureUploadPreview;
+}) {
   if (!file) return null;
 
   return (
@@ -278,7 +320,12 @@ function SelectedPreview({ file }: { file?: UploadQueueFile }) {
         className="overflow-hidden rounded-2xl border"
         style={{ borderColor: T.border, background: T.paper }}
       >
-        <ImagePreview file={file} aspectClassName="aspect-[16/9]" />
+        <ImagePreview
+          file={file}
+          aspectClassName="aspect-[16/9]"
+          onPreviewNeeded={onPreviewNeeded}
+          eager
+        />
       </div>
     </section>
   );
@@ -288,10 +335,12 @@ function ProjectImageGallery({
   files,
   selectedId,
   onSelect,
+  onPreviewNeeded,
 }: {
   files: UploadQueueFile[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onPreviewNeeded: EnsureUploadPreview;
 }) {
   return (
     <section className="mt-6 rounded-2xl border bg-white p-5" style={{ borderColor: T.border }}>
@@ -336,7 +385,11 @@ function ProjectImageGallery({
                     : "none",
               }}
             >
-              <ImagePreview file={file} aspectClassName="aspect-[4/3]" />
+              <ImagePreview
+                file={file}
+                aspectClassName="aspect-[4/3]"
+                onPreviewNeeded={onPreviewNeeded}
+              />
               <div className="space-y-1 px-3 py-3">
                 <div className="truncate text-sm font-semibold" style={{ color: T.ink }}>
                   {file.name}
@@ -357,17 +410,14 @@ function ProjectImageGallery({
 function ImagePreview({
   file,
   aspectClassName,
+  onPreviewNeeded,
+  eager = false,
 }: {
   file: UploadQueueFile;
   aspectClassName: string;
+  onPreviewNeeded: EnsureUploadPreview;
+  eager?: boolean;
 }) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const canRenderImage = Boolean(file.previewUrl && !imageFailed);
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [file.previewUrl]);
-
   return (
     <div
       className={`relative overflow-hidden ${aspectClassName}`}
@@ -376,24 +426,12 @@ function ImagePreview({
           "linear-gradient(135deg, rgba(14,20,9,1), rgba(43,77,14,0.92), rgba(74,184,212,0.22))",
       }}
     >
-      {canRenderImage ? (
-        <img
-          src={file.previewUrl}
-          alt={file.name}
-          className="h-full w-full object-cover"
-          onError={() => setImageFailed(true)}
-        />
-      ) : (
-        <div
-          className="h-full w-full opacity-60"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 28% 30%, rgba(154,224,83,0.4) 0, transparent 24%), radial-gradient(circle at 78% 55%, rgba(74,184,212,0.28) 0, transparent 20%), linear-gradient(90deg, rgba(255,255,255,0.09) 1px, transparent 1px), linear-gradient(0deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
-            backgroundSize: "auto, auto, 28px 28px, 28px 28px",
-          }}
-        />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+      <UploadImage
+        file={file}
+        onPreviewNeeded={onPreviewNeeded}
+        eager={eager}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
       <div className="absolute bottom-2 left-2 right-2">
         <div
           className="text-[7px] tracking-wide"
@@ -411,10 +449,16 @@ function ImagePreview({
           color: T.lime,
         }}
       >
-        {canRenderImage ? "IMAGE" : file.bands}
+        IMAGE
       </div>
     </div>
   );
+}
+
+function hasFreshPreview(file: UploadQueueFile) {
+  if (!file.previewUrl || !file.previewExpiresAt) return false;
+  const expiresAt = Date.parse(file.previewExpiresAt);
+  return Number.isFinite(expiresAt) && expiresAt > Date.now() + 60_000;
 }
 
 function createPreviewUrl(file?: File) {

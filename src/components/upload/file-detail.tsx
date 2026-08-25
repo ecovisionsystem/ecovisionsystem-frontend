@@ -16,6 +16,10 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { formatBytes, statusMeta, uploadTheme as T } from "./upload-utils";
 import { FileTypeIcon } from "./file-card";
+import {
+  UploadImage,
+  type EnsureUploadPreview,
+} from "./upload-image";
 import type {
   UploadMetadata,
   UploadQueueFile,
@@ -30,6 +34,7 @@ interface FileDetailProps {
   onResume?: (file: UploadQueueFile) => void;
   onRetry?: (file: UploadQueueFile) => void;
   onRemove?: (id: string) => void;
+  onPreviewNeeded?: EnsureUploadPreview;
 }
 
 const tabs: Array<{ id: UploadTab; label: string }> = [
@@ -46,6 +51,7 @@ export function FileDetail({
   onResume,
   onRetry,
   onRemove,
+  onPreviewNeeded,
 }: FileDetailProps) {
   const [tab, setTab] = useState<UploadTab>("inference");
 
@@ -117,7 +123,11 @@ export function FileDetail({
 
       <div className="flex-1 overflow-y-auto px-7 py-5">
         {tab === "meta" && (
-          <MetaTab file={file} onMetadataChange={onMetadataChange} />
+          <MetaTab
+            file={file}
+            onMetadataChange={onMetadataChange}
+            onPreviewNeeded={onPreviewNeeded}
+          />
         )}
         {tab === "inference" && (
           <InferenceTab
@@ -138,9 +148,11 @@ export function FileDetail({
 function MetaTab({
   file,
   onMetadataChange,
+  onPreviewNeeded,
 }: {
   file: UploadQueueFile;
   onMetadataChange?: (clientUploadId: string, metadata: UploadMetadata) => void;
+  onPreviewNeeded?: EnsureUploadPreview;
 }) {
   const groups = [
     {
@@ -175,7 +187,7 @@ function MetaTab({
 
   return (
     <div className="space-y-5">
-      <PreviewPanel file={file} />
+      <PreviewPanel file={file} onPreviewNeeded={onPreviewNeeded} />
 
       {groups.map((group) => (
         <div key={group.group}>
@@ -950,14 +962,13 @@ function ActionButton({
   );
 }
 
-function PreviewPanel({ file }: { file: UploadQueueFile }) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const canRenderImage = Boolean(file.previewUrl && !imageFailed);
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [file.previewUrl]);
-
+function PreviewPanel({
+  file,
+  onPreviewNeeded,
+}: {
+  file: UploadQueueFile;
+  onPreviewNeeded?: EnsureUploadPreview;
+}) {
   return (
     <div
       className="relative aspect-video overflow-hidden rounded-[14px] border"
@@ -967,24 +978,13 @@ function PreviewPanel({ file }: { file: UploadQueueFile }) {
           "linear-gradient(135deg, rgba(14,20,9,1), rgba(43,77,14,0.95) 45%, rgba(74,184,212,0.22))",
       }}
     >
-      {canRenderImage ? (
-        <img
-          src={file.previewUrl}
-          alt={file.name}
-          className="absolute inset-0 h-full w-full object-cover"
-          onError={() => setImageFailed(true)}
-        />
-      ) : (
-        <div
-          className="absolute inset-0 opacity-50"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 20%, rgba(154,224,83,0.36) 0, transparent 22%), radial-gradient(circle at 75% 40%, rgba(74,184,212,0.28) 0, transparent 20%), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(0deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
-            backgroundSize: "auto, auto, 34px 34px, 34px 34px",
-          }}
-        />
-      )}
-      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
+      <UploadImage
+        file={file}
+        onPreviewNeeded={onPreviewNeeded}
+        className="absolute inset-0 h-full w-full object-cover"
+        eager
+      />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
       <div className="absolute bottom-3 left-3 flex flex-wrap gap-1.5">
         {[file.lat, file.lng, `GSD ${file.metadata.gsd || file.gsd}`].map(
           (label) => (
@@ -1002,7 +1002,7 @@ function PreviewPanel({ file }: { file: UploadQueueFile }) {
         className="absolute right-3 top-3 rounded px-2 py-1 text-[8px] text-white/60"
         style={{ fontFamily: T.mono, background: "rgba(0,0,0,0.45)" }}
       >
-        {canRenderImage ? "IMAGE PREVIEW" : "PREVIEW"}
+        IMAGE PREVIEW
       </div>
     </div>
   );

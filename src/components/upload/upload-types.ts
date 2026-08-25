@@ -31,6 +31,7 @@ export interface UploadQueueFile {
   jobId?: string;
   uploadUrl?: string;
   previewUrl?: string;
+  previewExpiresAt?: string;
   metadata: UploadMetadata;
   errorMessage?: string;
   canResume: boolean;

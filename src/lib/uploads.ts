@@ -31,6 +31,11 @@ export interface PresignResponse {
   expiresAt: string;
 }
 
+export interface UploadPreviewResponse {
+  previewUrl: string;
+  expiresAt: string;
+}
+
 export const presignUpload = (input: PresignInput, token?: string) =>
   apiRequest<PresignResponse>("/uploads/presign", token, { method: "POST", body: JSON.stringify(input) });
 
@@ -39,6 +44,12 @@ export const completeUpload = (uploadId: string, token?: string) =>
 
 export const getUploadStatus = (uploadId: string, token?: string) =>
   apiRequest<UploadResource>(`/uploads/${encodeURIComponent(uploadId)}`, token);
+
+export const getUploadPreview = (uploadId: string, token?: string) =>
+  apiRequest<UploadPreviewResponse>(
+    `/uploads/${encodeURIComponent(uploadId)}/preview-url`,
+    token,
+  );
 
 export async function listProjectUploads(projectId: string, token?: string) {
   return (await apiRequest<Page<UploadResource>>(`/projects/${encodeURIComponent(projectId)}/uploads`, token)).items;
