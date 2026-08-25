@@ -94,7 +94,7 @@ export default function Architecture() {
               Advanced Model Architecture
             </h2>
             <p className="font-body-primary text-body-primary text-on-surface-variant mb-6">
-              <em> ecoVision's </em> pipeline treats vegetation mapping as a
+              <em> ecoVision&apos;s </em> pipeline treats vegetation mapping as a
               hierarchical perception problem, moving progressively from
               pixel-level spatial structure to object-level species identity to
               ecologically interpretable dominance scores.

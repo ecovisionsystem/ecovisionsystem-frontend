@@ -111,9 +111,7 @@ export function UploadImage({
     };
   }, [
     attempt,
-    file.file,
-    file.previewUrl,
-    file.status,
+    file,
     isTiff,
     isVisible,
     onPreviewNeeded,

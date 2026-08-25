@@ -1,43 +1,22 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useParams } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, useRequireAuth } from "@/hooks/useAuth";
 import { AppShell, PageHeader } from "@/components/layout";
 import { UploadDashboard } from "@/components/upload/upload-dashboard";
-import {
-  getProject,
-  projectPurposeLabels,
-  type Project,
-} from "@/lib/projects";
+import { projectPurposeLabels } from "@/lib/projects";
+import { useProject } from "@/hooks/useAnalysisQueries";
 
 export default function ProjectWorkspacePage() {
   const params = useParams();
   const projectId = params.projectId as string;
-  const { user, apiToken, isLoading, requireAuth, signOut } = useAuth();
-  const [project, setProject] = useState<Project | null>(null);
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState("");
+  const { user, isLoading, signOut } = useAuth();
+  const projectQuery = useProject(projectId);
 
-  requireAuth();
+  useRequireAuth();
 
-  useEffect(() => {
-    if (!isLoading && user && projectId) {
-      setError("");
-      getProject(projectId, apiToken)
-        .then(setProject)
-        .catch((reason: unknown) => {
-          setError(
-            reason instanceof Error
-              ? reason.message
-              : "Unable to load this project.",
-          );
-        })
-        .finally(() => setLoaded(true));
-    }
-  }, [apiToken, isLoading, projectId, user]);
-
-  if (isLoading || !loaded) {
+  if (isLoading || projectQuery.isLoading) {
     return (
       <AppShell user={user} onSignOut={signOut}>
         <PageHeader title="Loading..." breadcrumbs={[{ label: "Projects" }]} />
@@ -47,7 +26,7 @@ export default function ProjectWorkspacePage() {
 
   if (!user) return null;
 
-  if (error) {
+  if (projectQuery.error) {
     return (
       <AppShell user={user} onSignOut={signOut}>
         <PageHeader
@@ -57,11 +36,12 @@ export default function ProjectWorkspacePage() {
             { label: "Projects", href: "/dashboard/projects" },
           ]}
         />
-        <div className="p-6 text-sm text-red-700">{error}</div>
+        <div className="p-6 text-sm text-red-700">{projectQuery.error.message}</div>
       </AppShell>
     );
   }
 
+  const project = projectQuery.data;
   const projectName = project?.name || "Untitled project";
 
   return (

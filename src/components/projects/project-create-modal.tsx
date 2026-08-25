@@ -4,12 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FolderPlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
-import {
-  createProject,
-  projectPurposeLabels,
-  type ProjectPurpose,
-} from "@/lib/projects";
+import { useCreateProject } from "@/hooks/useAnalysisQueries";
 
 interface ProjectCreateModalProps {
   open: boolean;
@@ -17,22 +12,16 @@ interface ProjectCreateModalProps {
   cancelHref?: string;
 }
 
-const purposeOptions: ProjectPurpose[] = [
-  "inference",
-  "training_repository",
-  "request",
-];
-
 export function ProjectCreateModal({
   open,
   onOpenChange,
   cancelHref,
 }: ProjectCreateModalProps) {
   const router = useRouter();
-  const { apiToken } = useAuth();
+  const createProject = useCreateProject();
   const [name, setName] = useState("");
-  const [purpose, setPurpose] = useState<ProjectPurpose>("inference");
-  const [isCreating, setIsCreating] = useState(false);
+  const [location, setLocation] = useState("");
+  const [description, setDescription] = useState("");
   const [error, setError] = useState("");
 
   if (!open) return null;
@@ -51,22 +40,22 @@ export function ProjectCreateModal({
       return;
     }
 
-    setIsCreating(true);
     try {
-      const project = await createProject(
-        { name: name.trim(), purpose },
-        apiToken,
-      );
+      const project = await createProject.mutateAsync({
+        name: name.trim(),
+        purpose: "inference",
+        location: location.trim() || undefined,
+        description: description.trim() || undefined,
+      });
       onOpenChange(false);
       setName("");
-      setPurpose("inference");
+      setLocation("");
+      setDescription("");
       router.push(`/dashboard/projects/${project.id}`);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Unable to create project.",
       );
-    } finally {
-      setIsCreating(false);
     }
   };
 
@@ -106,27 +95,45 @@ export function ProjectCreateModal({
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Foryd Bay July survey"
-              disabled={isCreating}
+              disabled={createProject.isPending}
               className="h-12 w-full rounded-md border border-border bg-surface px-3 text-base text-text-primary placeholder:text-text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-50"
+            />
+          </label>
+
+          <div className="rounded-md border border-border bg-surface-overlay px-3 py-2">
+            <p className="text-sm font-medium text-text-primary">
+              Inference project
+            </p>
+            <p className="text-xs text-text-secondary">
+              Upload UAV imagery and run EcoVision analysis.
+            </p>
+          </div>
+
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-text-primary">
+              Location or site <span className="font-normal text-text-muted">(optional)</span>
+            </span>
+            <input
+              value={location}
+              onChange={(event) => setLocation(event.target.value)}
+              placeholder="Foryd Bay"
+              disabled={createProject.isPending}
+              className="h-12 w-full rounded-md border border-border bg-surface px-3 text-base text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-50"
             />
           </label>
 
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-text-primary">
-              Purpose
+              Description <span className="font-normal text-text-muted">(optional)</span>
             </span>
-            <select
-              value={purpose}
-              onChange={(event) => setPurpose(event.target.value as ProjectPurpose)}
-              disabled={isCreating}
-              className="h-12 w-full rounded-md border border-border bg-surface px-3 text-base text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-50"
-            >
-              {purposeOptions.map((option) => (
-                <option key={option} value={option}>
-                  {projectPurposeLabels[option]}
-                </option>
-              ))}
-            </select>
+            <textarea
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="July UAV vegetation survey"
+              disabled={createProject.isPending}
+              rows={3}
+              className="w-full rounded-md border border-border bg-surface px-3 py-2 text-base text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-50"
+            />
           </label>
 
           {error && <p className="text-sm text-error">{error}</p>}
@@ -136,11 +143,11 @@ export function ProjectCreateModal({
               type="button"
               variant="secondary"
               onClick={handleCancel}
-              disabled={isCreating}
+              disabled={createProject.isPending}
             >
               Cancel
             </Button>
-            <Button type="submit" loading={isCreating}>
+            <Button type="submit" loading={createProject.isPending}>
               Create
             </Button>
           </div>

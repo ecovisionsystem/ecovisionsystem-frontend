@@ -45,6 +45,13 @@ export const completeUpload = (uploadId: string, token?: string) =>
 export const getUploadStatus = (uploadId: string, token?: string) =>
   apiRequest<UploadResource>(`/uploads/${encodeURIComponent(uploadId)}`, token);
 
+export const retryUpload = (uploadId: string, token?: string) =>
+  apiRequest<PresignResponse>(
+    `/uploads/${encodeURIComponent(uploadId)}/retry`,
+    token,
+    { method: "POST" },
+  );
+
 export const getUploadPreview = (uploadId: string, token?: string) =>
   apiRequest<UploadPreviewResponse>(
     `/uploads/${encodeURIComponent(uploadId)}/preview-url`,

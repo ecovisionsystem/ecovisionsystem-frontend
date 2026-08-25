@@ -15,6 +15,18 @@ export interface ProblemDetail {
   requestId?: string;
 }
 
+export class ApiError extends Error {
+  readonly status: number;
+  readonly requestId?: string;
+
+  constructor(status: number, message: string, requestId?: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.requestId = requestId;
+  }
+}
+
 export async function apiRequest<T>(
   path: string,
   accessToken: string | undefined,
@@ -31,7 +43,11 @@ export async function apiRequest<T>(
   });
   if (!response.ok) {
     const problem = (await response.json().catch(() => null)) as ProblemDetail | null;
-    throw new Error(problem?.detail || response.statusText || "Request failed.");
+    throw new ApiError(
+      response.status,
+      problem?.detail || response.statusText || "Request failed.",
+      problem?.requestId || response.headers.get("x-request-id") || undefined,
+    );
   }
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;

@@ -634,7 +634,7 @@ export default function LoginPage() {
                   marginBottom: 5,
                 }}
               >
-                You're signed in.
+                You&apos;re signed in.
               </p>
               <p
                 style={{
