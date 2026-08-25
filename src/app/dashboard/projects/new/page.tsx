@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, useRequireAuth } from "@/hooks/useAuth";
 import { AppShell, PageHeader } from "@/components/layout";
 import { ProjectCreateModal } from "@/components/projects/project-create-modal";
 
 export default function NewProjectPage() {
-  const { user, isLoading, requireAuth, signOut } = useAuth();
+  const { user, isLoading, signOut } = useAuth();
   const [open, setOpen] = useState(true);
 
-  requireAuth();
+  useRequireAuth();
 
   useEffect(() => {
     setOpen(true);

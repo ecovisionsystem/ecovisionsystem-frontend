@@ -3,16 +3,16 @@
 import React from "react";
 import Link from "next/link";
 import { FolderOpen, MapPin } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, useRequireAuth } from "@/hooks/useAuth";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ResultsIndexPage() {
-  const { user, isLoading, requireAuth, signOut } = useAuth();
+  const { user, isLoading, signOut } = useAuth();
 
-  requireAuth();
+  useRequireAuth();
 
   if (isLoading) {
     return (

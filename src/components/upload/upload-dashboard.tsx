@@ -1,14 +1,21 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { filesToQueueItems, uploadTheme as T } from "./upload-utils";
+import { filesToQueueItems, uploadTheme as T, validateUploadFile } from "./upload-utils";
+import { useRouter } from "next/navigation";
 import { DropZone } from "./drop-zone";
 import { FileDetail } from "./file-detail";
 import { StatusBar } from "./status-bar";
+import {
+  UploadImage,
+  type EnsureUploadPreview,
+} from "./upload-image";
 import { UploadQueue } from "./upload-queue";
 import { useAuth } from "@/hooks/useAuth";
+import { useCreateJob, useProjectUploads } from "@/hooks/useAnalysisQueries";
 import { usePresignedUpload } from "@/hooks/usePresignedUpload";
-import { listProjectUploads } from "@/lib/uploads";
+import { ApiError } from "@/lib/api-client";
+import { getUploadPreview } from "@/lib/uploads";
 import type {
   ProjectUpload,
   UploadMetadata,
@@ -27,9 +34,14 @@ export function UploadDashboard({
   projectName,
   initialUploadedFiles,
 }: UploadDashboardProps) {
+  const router = useRouter();
   const { apiToken } = useAuth();
+  const projectUploadsQuery = useProjectUploads(projectId);
+  const refetchProjectUploads = projectUploadsQuery.refetch;
+  const createJobMutation = useCreateJob();
   const initialFiles = initialUploadedFiles ?? [];
   const previewUrlsRef = useRef<Set<string>>(new Set());
+  const previewRequestsRef = useRef<Map<string, Promise<void>>>(new Map());
   const [files, setFiles] = useState<UploadQueueFile[]>(
     initialFiles,
   );
@@ -39,6 +51,8 @@ export function UploadDashboard({
   const [selectedId, setSelectedId] = useState<string | null>(
     initialFiles[0]?.id ?? null,
   );
+  const [selectionError, setSelectionError] = useState("");
+  const [analysisErrors, setAnalysisErrors] = useState<Record<string, string>>({});
 
   const updateFile = useCallback(
     (clientUploadId: string, patch: Partial<UploadQueueFile>) => {
@@ -49,7 +63,7 @@ export function UploadDashboard({
       }
 
       setFiles((current) => {
-        if (patch.status && isTerminalUploadStatus(patch.status)) {
+        if (patch.status === "cancelled") {
           return current.filter(
             (file) => file.clientUploadId !== clientUploadId,
           );
@@ -65,16 +79,36 @@ export function UploadDashboard({
 
   const hasProjectContext = Boolean(projectId);
 
-  const refreshProjectUploads = useCallback(async () => {
-    if (!projectId || !apiToken) return;
+  const ensureUploadPreview = useCallback<EnsureUploadPreview>(
+    async (file, force = false) => {
+      if (file.previewUrl?.startsWith("blob:")) return;
+      if (!force && hasFreshPreview(file)) return;
+      if (!file.uploadId || file.status !== "uploaded") return;
+      if (!apiToken) throw new Error("You must be signed in.");
 
-    try {
-      const uploads = await listProjectUploads(projectId, apiToken);
-      setFiles((current) => mergeProjectUploads(current, uploads, projectId));
-    } catch (error) {
-      console.error("Failed to load project uploads:", error);
-    }
-  }, [apiToken, projectId]);
+      const existingRequest = previewRequestsRef.current.get(file.uploadId);
+      if (existingRequest) return existingRequest;
+
+      const request = getUploadPreview(file.uploadId, apiToken)
+        .then((preview) => {
+          updateFile(file.clientUploadId, {
+            previewUrl: preview.previewUrl,
+            previewExpiresAt: preview.expiresAt,
+          });
+        })
+        .finally(() => {
+          previewRequestsRef.current.delete(file.uploadId as string);
+        });
+      previewRequestsRef.current.set(file.uploadId, request);
+      return request;
+    },
+    [apiToken, updateFile],
+  );
+
+  const refreshProjectUploads = useCallback(async () => {
+    if (!projectId) return;
+    await refetchProjectUploads();
+  }, [projectId, refetchProjectUploads]);
 
   const uploadController = usePresignedUpload({
     projectId,
@@ -84,13 +118,17 @@ export function UploadDashboard({
   });
 
   useEffect(() => {
-    void refreshProjectUploads();
-  }, [refreshProjectUploads]);
+    if (!projectId || !projectUploadsQuery.data) return;
+    setFiles((current) =>
+      mergeProjectUploads(current, projectUploadsQuery.data, projectId),
+    );
+  }, [projectId, projectUploadsQuery.data]);
 
   useEffect(() => {
+    const previewUrls = previewUrlsRef.current;
     return () => {
-      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-      previewUrlsRef.current.clear();
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+      previewUrls.clear();
     };
   }, []);
 
@@ -102,7 +140,15 @@ export function UploadDashboard({
   }, [files]);
 
   const addFiles = useCallback((rawFiles: File[]) => {
-    const newFiles = filesToQueueItems(rawFiles, projectId).map((file) => ({
+    const validation = rawFiles.map((file) => ({ file, error: validateUploadFile(file) }));
+    const validFiles = validation.filter((item) => !item.error).map((item) => item.file);
+    const errors = validation.filter((item) => item.error);
+    setSelectionError(
+      errors.length
+        ? `${errors.length} file${errors.length === 1 ? " was" : "s were"} not added: ${errors[0].error}`
+        : "",
+    );
+    const newFiles = filesToQueueItems(validFiles, projectId).map((file) => ({
       ...file,
       previewUrl: createPreviewUrl(file.file),
     }));
@@ -158,7 +204,7 @@ export function UploadDashboard({
         updateFile(file.clientUploadId, {
           status: "failed",
           errorMessage:
-            "Open or create a project before uploading to S3. The legacy upload page is preview-only.",
+            "Open or create a project before uploading imagery.",
         });
         return;
       }
@@ -166,6 +212,31 @@ export function UploadDashboard({
       await uploadController.start(file);
     },
     [hasProjectContext, updateFile, uploadController],
+  );
+
+  const runAnalysis = useCallback(
+    async (file: UploadQueueFile) => {
+      if (!file.uploadId || createJobMutation.isPending) return;
+      setAnalysisErrors((current) => ({ ...current, [file.id]: "" }));
+      try {
+        const job = await createJobMutation.mutateAsync(file.uploadId);
+        updateFile(file.clientUploadId, { jobId: job.id });
+        router.push(`/results/${job.id}`);
+      } catch (error) {
+        const unavailable =
+          error instanceof ApiError &&
+          (error.status === 404 ||
+            error.status === 405 ||
+            (error.status === 409 && /active model/i.test(error.message)));
+        setAnalysisErrors((current) => ({
+          ...current,
+          [file.id]: unavailable
+            ? "Analysis service is not yet available."
+            : "EcoVision could not start this analysis. Please try again.",
+        }));
+      }
+    },
+    [createJobMutation, router, updateFile],
   );
 
   const activeFile = useMemo(
@@ -207,6 +278,18 @@ export function UploadDashboard({
           <main className="flex min-h-[640px] flex-col gap-5 overflow-y-auto p-7">
             <DropZone onFiles={addFiles} />
 
+            {selectionError && (
+              <div className="rounded-lg border border-error/20 bg-error-bg px-3 py-2 text-sm text-error" role="alert">
+                {selectionError}
+              </div>
+            )}
+
+            {projectUploadsQuery.error && (
+              <div className="rounded-lg border border-error/20 bg-error-bg px-3 py-2 text-sm text-error" role="alert">
+                Project imagery is temporarily unavailable.
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className="text-[9px] uppercase tracking-[1px]"
@@ -237,7 +320,10 @@ export function UploadDashboard({
               ))}
             </div>
 
-            <SelectedPreview file={activeFile} />
+            <SelectedPreview
+              file={activeFile}
+              onPreviewNeeded={ensureUploadPreview}
+            />
           </main>
 
           <div style={{ borderColor: T.border }}>
@@ -246,7 +332,15 @@ export function UploadDashboard({
               onMetadataChange={updateMetadata}
               onStart={startUpload}
               onRetry={uploadController.retry}
+              onCancelUpload={uploadController.cancelActive}
               onRemove={removeFile}
+              onPreviewNeeded={ensureUploadPreview}
+              onRunAnalysis={runAnalysis}
+              analysisSubmitting={
+                createJobMutation.isPending &&
+                createJobMutation.variables === activeFile?.uploadId
+              }
+              analysisError={activeFile ? analysisErrors[activeFile.id] : undefined}
             />
           </div>
         </div>
@@ -256,6 +350,7 @@ export function UploadDashboard({
           files={uploadedFiles}
           selectedId={selectedId}
           onSelect={setSelectedId}
+          onPreviewNeeded={ensureUploadPreview}
         />
       )}
       <StatusBar files={queueFiles} />
@@ -263,7 +358,13 @@ export function UploadDashboard({
   );
 }
 
-function SelectedPreview({ file }: { file?: UploadQueueFile }) {
+function SelectedPreview({
+  file,
+  onPreviewNeeded,
+}: {
+  file?: UploadQueueFile;
+  onPreviewNeeded: EnsureUploadPreview;
+}) {
   if (!file) return null;
 
   return (
@@ -278,7 +379,12 @@ function SelectedPreview({ file }: { file?: UploadQueueFile }) {
         className="overflow-hidden rounded-2xl border"
         style={{ borderColor: T.border, background: T.paper }}
       >
-        <ImagePreview file={file} aspectClassName="aspect-[16/9]" />
+        <ImagePreview
+          file={file}
+          aspectClassName="aspect-[16/9]"
+          onPreviewNeeded={onPreviewNeeded}
+          eager
+        />
       </div>
     </section>
   );
@@ -288,10 +394,12 @@ function ProjectImageGallery({
   files,
   selectedId,
   onSelect,
+  onPreviewNeeded,
 }: {
   files: UploadQueueFile[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onPreviewNeeded: EnsureUploadPreview;
 }) {
   return (
     <section className="mt-6 rounded-2xl border bg-white p-5" style={{ borderColor: T.border }}>
@@ -336,7 +444,11 @@ function ProjectImageGallery({
                     : "none",
               }}
             >
-              <ImagePreview file={file} aspectClassName="aspect-[4/3]" />
+              <ImagePreview
+                file={file}
+                aspectClassName="aspect-[4/3]"
+                onPreviewNeeded={onPreviewNeeded}
+              />
               <div className="space-y-1 px-3 py-3">
                 <div className="truncate text-sm font-semibold" style={{ color: T.ink }}>
                   {file.name}
@@ -357,17 +469,14 @@ function ProjectImageGallery({
 function ImagePreview({
   file,
   aspectClassName,
+  onPreviewNeeded,
+  eager = false,
 }: {
   file: UploadQueueFile;
   aspectClassName: string;
+  onPreviewNeeded: EnsureUploadPreview;
+  eager?: boolean;
 }) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const canRenderImage = Boolean(file.previewUrl && !imageFailed);
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [file.previewUrl]);
-
   return (
     <div
       className={`relative overflow-hidden ${aspectClassName}`}
@@ -376,24 +485,12 @@ function ImagePreview({
           "linear-gradient(135deg, rgba(14,20,9,1), rgba(43,77,14,0.92), rgba(74,184,212,0.22))",
       }}
     >
-      {canRenderImage ? (
-        <img
-          src={file.previewUrl}
-          alt={file.name}
-          className="h-full w-full object-cover"
-          onError={() => setImageFailed(true)}
-        />
-      ) : (
-        <div
-          className="h-full w-full opacity-60"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 28% 30%, rgba(154,224,83,0.4) 0, transparent 24%), radial-gradient(circle at 78% 55%, rgba(74,184,212,0.28) 0, transparent 20%), linear-gradient(90deg, rgba(255,255,255,0.09) 1px, transparent 1px), linear-gradient(0deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
-            backgroundSize: "auto, auto, 28px 28px, 28px 28px",
-          }}
-        />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+      <UploadImage
+        file={file}
+        onPreviewNeeded={onPreviewNeeded}
+        eager={eager}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
       <div className="absolute bottom-2 left-2 right-2">
         <div
           className="text-[7px] tracking-wide"
@@ -411,10 +508,16 @@ function ImagePreview({
           color: T.lime,
         }}
       >
-        {canRenderImage ? "IMAGE" : file.bands}
+        IMAGE
       </div>
     </div>
   );
+}
+
+function hasFreshPreview(file: UploadQueueFile) {
+  if (!file.previewUrl || !file.previewExpiresAt) return false;
+  const expiresAt = Date.parse(file.previewExpiresAt);
+  return Number.isFinite(expiresAt) && expiresAt > Date.now() + 60_000;
 }
 
 function createPreviewUrl(file?: File) {
@@ -493,7 +596,7 @@ function isTerminalUploadStatus(status: string) {
 }
 
 function isQueueExitStatus(status: string) {
-  return status === "uploaded" || isTerminalUploadStatus(status);
+  return status === "uploaded" || status === "cancelled";
 }
 
 function removeQueuedClientUploadId(

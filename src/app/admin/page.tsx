@@ -1,17 +1,17 @@
 "use client";
 
 import React from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, useRequireAuth } from "@/hooks/useAuth";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getAdminStats, type AdminStats } from "@/lib/jobs";
 
 export default function AdminPage() {
-  const { user, apiToken, isLoading, requireAuth, signOut } = useAuth();
+  const { user, apiToken, isLoading, signOut } = useAuth();
   const [stats, setStats] = React.useState<AdminStats | null>(null);
   const [error, setError] = React.useState("");
-  requireAuth();
+  useRequireAuth();
   React.useEffect(() => { if (!isLoading && user?.role === "admin") getAdminStats(apiToken).then(setStats).catch((e) => setError(e instanceof Error ? e.message : "Unable to load admin data.")); }, [apiToken, isLoading, user]);
   if (isLoading) return <AppShell user={user} onSignOut={signOut}><PageHeader title="Admin" breadcrumbs={[{ label: "Admin" }]} /><div className="p-6"><Skeleton className="h-64 w-full" /></div></AppShell>;
   if (!user) return null;

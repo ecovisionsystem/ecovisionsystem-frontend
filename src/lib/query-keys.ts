@@ -1,26 +1,27 @@
-// Centralized query key factory for TanStack Query
 export const queryKeys = {
-  all: ["query"] as const,
-  auth: {
-    all: ["auth"] as const,
-    user: () => ["auth", "user"] as const,
+  dashboard: {
+    summary: (scope: string) => ["dashboard", scope, "summary"] as const,
+  },
+  projects: {
+    all: (scope: string) => ["projects", scope] as const,
+    detail: (scope: string, projectId: string) =>
+      ["projects", scope, projectId] as const,
+  },
+  uploads: {
+    project: (scope: string, projectId: string) =>
+      ["uploads", scope, "project", projectId] as const,
+    preview: (scope: string, uploadId: string) =>
+      ["uploads", scope, uploadId, "preview"] as const,
   },
   jobs: {
-    all: ["jobs"] as const,
-    list: (page: number = 1, limit: number = 20) =>
-      ["jobs", "list", { page, limit }] as const,
-    detail: (jobId: string) => ["jobs", jobId] as const,
-    result: (jobId: string) => ["jobs", jobId, "result"] as const,
-    byUser: (userId: string) => ["jobs", "user", userId] as const,
+    detail: (scope: string, jobId: string) =>
+      ["jobs", scope, jobId] as const,
+    project: (scope: string, projectId: string) =>
+      ["jobs", scope, "project", projectId] as const,
+    result: (scope: string, jobId: string) =>
+      ["jobs", scope, jobId, "result"] as const,
   },
   admin: {
-    all: ["admin"] as const,
-    health: () => ["admin", "health"] as const,
-    jobs: (page: number = 1, limit: number = 50) =>
-      ["admin", "jobs", { page, limit }] as const,
-  },
-  results: {
-    all: ["results"] as const,
-    detail: (jobId: string) => ["results", jobId] as const,
+    stats: (scope: string) => ["admin", scope, "stats"] as const,
   },
 } as const;

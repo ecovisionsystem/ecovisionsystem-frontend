@@ -1,43 +1,24 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { FolderPlus } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, useRequireAuth } from "@/hooks/useAuth";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ProjectCreateModal } from "@/components/projects/project-create-modal";
-import {
-  listProjects,
-  projectPurposeLabels,
-  type Project,
-} from "@/lib/projects";
+import { projectPurposeLabels } from "@/lib/projects";
+import { useProjects } from "@/hooks/useAnalysisQueries";
 
 export default function ProjectsPage() {
-  const { user, apiToken, isLoading, requireAuth, signOut } = useAuth();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const { user, isLoading, signOut } = useAuth();
   const [modalOpen, setModalOpen] = useState(false);
-  const [error, setError] = useState("");
+  const projectsQuery = useProjects();
 
-  requireAuth();
+  useRequireAuth();
 
-  useEffect(() => {
-    if (!isLoading && user) {
-      setError("");
-      listProjects(apiToken)
-        .then(setProjects)
-        .catch((reason: unknown) => {
-          setError(
-            reason instanceof Error
-              ? reason.message
-              : "Unable to load projects.",
-          );
-        });
-    }
-  }, [apiToken, isLoading, user]);
-
-  if (isLoading) {
+  if (isLoading || projectsQuery.isLoading) {
     return (
       <AppShell user={user} onSignOut={signOut}>
         <PageHeader title="Loading..." breadcrumbs={[{ label: "Projects" }]} />
@@ -46,6 +27,7 @@ export default function ProjectsPage() {
   }
 
   if (!user) return null;
+  const projects = projectsQuery.data ?? [];
 
   return (
     <AppShell user={user} onSignOut={signOut}>
@@ -63,12 +45,12 @@ export default function ProjectsPage() {
         }
       />
       <div className="p-6">
-        {error ? (
+        {projectsQuery.error ? (
           <Card className="border-red-200 bg-red-50 text-center">
             <h2 className="text-lg font-semibold text-red-900">
               Projects are temporarily unavailable
             </h2>
-            <p className="mt-2 text-sm text-red-700">{error}</p>
+            <p className="mt-2 text-sm text-red-700">{projectsQuery.error.message}</p>
           </Card>
         ) : projects.length === 0 ? (
           <Card className="text-center">

@@ -16,6 +16,27 @@ export const statusMeta: Record<UploadStatus, { label: string; color: string; bg
 
 export const formatBytes = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1048576 ? `${(bytes / 1024).toFixed(1)} KB` : bytes < 1073741824 ? `${(bytes / 1048576).toFixed(1)} MB` : `${(bytes / 1073741824).toFixed(2)} GB`;
 
+const MAX_UPLOAD_BYTES = 5_368_709_120;
+const supportedExtensions = [".tif", ".tiff", ".png", ".jpg", ".jpeg"];
+
+export function validateUploadFile(file: File) {
+  const name = file.name.toLowerCase();
+  if (file.size <= 0) return "empty files are not supported.";
+  if (file.size > MAX_UPLOAD_BYTES) return "files must be 5 GB or smaller.";
+  if (!supportedExtensions.some((extension) => name.endsWith(extension))) {
+    return "use TIFF, GeoTIFF, PNG, or JPEG imagery.";
+  }
+  return null;
+}
+
+function uploadContentType(file: File) {
+  if (file.type) return file.type;
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".tif") || name.endsWith(".tiff")) return "image/tiff";
+  if (name.endsWith(".png")) return "image/png";
+  return "image/jpeg";
+}
+
 export function filesToQueueItems(files: File[], projectId?: string): UploadQueueFile[] {
-  return files.map((file) => ({ id: crypto.randomUUID(), clientUploadId: crypto.randomUUID(), projectId, file, name: file.name, size: file.size, contentType: file.type || "application/octet-stream", gsd: "-", crs: "Detecting...", bands: file.name.toLowerCase().includes("_ms") ? "MS-5" : "RGB", dims: "-", lat: "-", lng: "-", status: "selected", progress: 0, metadata: {}, canResume: false }));
+  return files.map((file) => ({ id: crypto.randomUUID(), clientUploadId: crypto.randomUUID(), projectId, file, name: file.name, size: file.size, contentType: uploadContentType(file), gsd: "-", crs: "-", bands: file.name.toLowerCase().includes("_ms") ? "MS-5" : "RGB", dims: "-", lat: "-", lng: "-", status: "selected", progress: 0, metadata: {}, canResume: false }));
 }

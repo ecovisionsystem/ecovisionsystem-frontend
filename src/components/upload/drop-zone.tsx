@@ -121,7 +121,7 @@ export function DropZone({ onFiles }: DropZoneProps) {
         </div>
 
         <div className="flex flex-wrap justify-center gap-2">
-          {["Presigned S3 Upload", "GSD Detection"].map((label) => (
+          {["Secure upload", "UAV imagery"].map((label) => (
             <span
               key={label}
               className="rounded-full border px-3 py-1 text-[9px]"

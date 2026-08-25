@@ -9,7 +9,7 @@ export type UploadStatus =
   | "failed"
   | "cancelled";
 
-export type UploadTab = "meta" | "inference" | "results";
+export type UploadTab = "meta" | "analysis" | "results";
 
 export interface UploadMetadata {
   surveyName?: string;
@@ -31,6 +31,7 @@ export interface UploadQueueFile {
   jobId?: string;
   uploadUrl?: string;
   previewUrl?: string;
+  previewExpiresAt?: string;
   metadata: UploadMetadata;
   errorMessage?: string;
   canResume: boolean;

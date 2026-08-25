@@ -35,14 +35,6 @@ export function useAuth() {
     router.replace("/login");
   };
 
-  const requireAuth = (redirectPath = "/login") => {
-    useEffect(() => {
-      if (!isLoading && !isAuthenticated) {
-        router.replace(redirectPath);
-      }
-    }, [isLoading, isAuthenticated, redirectPath, router]);
-  };
-
   return {
     user,
     claims,
@@ -55,6 +47,14 @@ export function useAuth() {
     refreshSession,
     signOut: logout,
     hasRole,
-    requireAuth,
   };
+}
+
+export function useRequireAuth(redirectPath = "/login") {
+  const { isAuthenticated, isLoading } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) router.replace(redirectPath);
+  }, [isAuthenticated, isLoading, redirectPath, router]);
 }
