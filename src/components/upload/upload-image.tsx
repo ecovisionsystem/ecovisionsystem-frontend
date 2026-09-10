@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { AlertCircle, Loader2, RefreshCcw } from "lucide-react";
+import { uploadPreviewErrorMessage } from "@/lib/uploads";
 import type { UploadQueueFile } from "./upload-types";
 import { uploadTheme as T } from "./upload-utils";
 
@@ -100,9 +101,7 @@ export function UploadImage({
       if (controller.signal.aborted) return;
       setRenderedUrl(undefined);
       setState("error");
-      setErrorMessage(
-        error instanceof Error ? error.message : "Preview unavailable.",
-      );
+      setErrorMessage(uploadPreviewErrorMessage(error));
     });
 
     return () => {
@@ -127,9 +126,7 @@ export function UploadImage({
         await onPreviewNeeded(file, true);
       } catch (error) {
         setState("error");
-        setErrorMessage(
-          error instanceof Error ? error.message : "Preview unavailable.",
-        );
+        setErrorMessage(uploadPreviewErrorMessage(error));
         return;
       }
     }
