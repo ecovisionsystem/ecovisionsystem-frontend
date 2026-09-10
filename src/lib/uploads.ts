@@ -1,6 +1,6 @@
 "use client";
 
-import { apiRequest, type Page } from "@/lib/api-client";
+import { ApiError, apiRequest, type Page } from "@/lib/api-client";
 
 export interface UploadResource {
   id: string;
@@ -57,6 +57,22 @@ export const getUploadPreview = (uploadId: string, token?: string) =>
     `/uploads/${encodeURIComponent(uploadId)}/preview-url`,
     token,
   );
+
+export function uploadPreviewErrorMessage(error: unknown) {
+  if (error instanceof ApiError && error.status === 404) {
+    return /^not found$/i.test(error.message.trim())
+      ? "Image preview is not available on the connected backend yet."
+      : "This upload record is not available on the connected backend.";
+  }
+
+  if (error instanceof ApiError && error.status >= 500) {
+    return "The image preview service is temporarily unavailable.";
+  }
+
+  return error instanceof Error
+    ? error.message
+    : "The uploaded image preview could not be loaded.";
+}
 
 export async function listProjectUploads(projectId: string, token?: string) {
   return (await apiRequest<Page<UploadResource>>(`/projects/${encodeURIComponent(projectId)}/uploads`, token)).items;
