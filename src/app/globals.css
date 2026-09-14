@@ -569,3 +569,158 @@
     }
   }
 }
+
+/* Authenticated workspace: neutral canvas and compact navigation.
+   Brand primary and semantic status colours remain unchanged. */
+.ecovision-workspace {
+  --workspace-font: "Geist", "Inter", Arial, sans-serif;
+  --workspace-paper: #ffffff;
+  --workspace-panel: #f7f8f9;
+  --workspace-subtle: #eef0f2;
+  --workspace-ink: #242424;
+  --workspace-secondary: #535a63;
+  --workspace-muted: #66717d;
+  --color-surface: #ffffff;
+  --color-surface-raised: #f7f8f9;
+  --color-surface-overlay: #f1f2f4;
+  --color-border: #e0e4e8;
+  --color-border-strong: #cbd2d9;
+  --color-text-primary: #242424;
+  --color-text-secondary: #535a63;
+  --color-text-muted: #66717d;
+  font-family: var(--workspace-font);
+  background: #f2f4f6;
+  height: 100dvh;
+  padding: 8px 8px 8px 0;
+}
+.ecovision-workspace .workspace-main {
+  min-width: 0;
+  background: #fff;
+  border-radius: 26px;
+  scrollbar-gutter: stable;
+}
+.ecovision-workspace .workspace-content {
+  max-width: 1380px;
+  margin-inline: auto;
+  padding: 12px 32px 36px;
+}
+.ecovision-workspace .workspace-page-header {
+  padding: 28px 24px 26px;
+  border: 0;
+  background: transparent;
+}
+.ecovision-workspace .workspace-page-header h1 {
+  font-size: clamp(25px, 2.1vw, 32px);
+  line-height: 1.25;
+  letter-spacing: -0.035em;
+  font-weight: 600;
+}
+.ecovision-workspace .workspace-page-header > div:first-child {
+  flex-wrap: wrap;
+}
+.ecovision-workspace .workspace-content > .p-6 {
+  padding-top: 8px;
+}
+.ecovision-workspace .workspace-card {
+  border-radius: 24px;
+  box-shadow: none;
+  border-color: #e8ebee;
+}
+.ecovision-workspace .workspace-card.bg-surface {
+  background: #f7f8f9;
+  border-color: transparent;
+}
+.ecovision-workspace .workspace-button {
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  padding-inline: 20px;
+}
+.ecovision-workspace .workspace-sidebar {
+  background: #f2f4f6;
+  border-right: 0;
+  overflow-y: auto;
+}
+.ecovision-workspace .workspace-brand {
+  order: 0;
+  padding: 22px 22px 16px;
+  border: 0;
+}
+.ecovision-workspace .workspace-brand h1 {
+  color: #242424;
+  font-size: 23px;
+  letter-spacing: -0.06em;
+  font-weight: 700;
+}
+.ecovision-workspace .workspace-account { display: contents; }
+.ecovision-workspace .workspace-profile {
+  order: 1;
+  margin: 0 14px;
+  padding: 16px 8px 22px;
+  border-bottom: 1px solid #dfe4e9;
+  border-radius: 0;
+}
+.ecovision-workspace .workspace-navigation { order: 2; padding: 22px 10px; }
+.ecovision-workspace .workspace-navigation a {
+  min-height: 40px;
+  padding-block: 10px;
+  border-radius: 6px;
+  font-weight: 400;
+  color: #242424;
+}
+.ecovision-workspace .workspace-navigation a.bg-brand-muted {
+  background: #d8dee4;
+  color: #242424;
+  font-weight: 500;
+}
+.ecovision-workspace .workspace-navigation svg { stroke-width: 1.4; }
+.ecovision-workspace .workspace-navigation .uppercase {
+  text-transform: none;
+  font-size: 13px;
+  letter-spacing: 0;
+}
+.ecovision-workspace .workspace-signout {
+  order: 3;
+  width: calc(100% - 24px);
+  margin: 12px 12px 22px;
+  color: #535a63;
+  min-height: 40px;
+}
+.ecovision-workspace .upload-workspace {
+  margin: 8px 24px 24px;
+  border-radius: 24px;
+  border: 1px solid #e8ebee;
+}
+.ecovision-workspace .upload-workspace-grid {
+  gap: 16px;
+  padding: 16px;
+}
+.ecovision-workspace .upload-workspace-grid > main { padding: 8px; }
+.ecovision-workspace .upload-workspace-grid > aside,
+.ecovision-workspace .upload-workspace-grid > div > aside {
+  border-radius: 20px;
+  background: #f7f8f9;
+}
+.ecovision-workspace input:not([type="checkbox"]):not([type="radio"]),
+.ecovision-workspace textarea,
+.ecovision-workspace select { border-radius: 12px; }
+@media (min-width: 1280px) {
+  .ecovision-workspace .upload-workspace-grid {
+    grid-template-columns: 220px minmax(0, 1fr) 300px;
+  }
+}
+@media (min-width: 768px) and (max-width: 1279px) {
+  .ecovision-workspace .workspace-content { padding-inline: 12px; }
+  .ecovision-workspace .upload-workspace-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .ecovision-workspace { padding: 6px; }
+  .ecovision-workspace .workspace-main { border-radius: 20px; margin-left: 0; }
+  .ecovision-workspace .workspace-content { padding: 58px 4px 24px; }
+  .ecovision-workspace .workspace-page-header { padding: 16px 16px 24px; }
+  .ecovision-workspace .workspace-page-header > div:last-child { flex-wrap: wrap; }
+  .ecovision-workspace .workspace-content > .p-6 { padding-inline: 16px; }
+  .ecovision-workspace .workspace-card { border-radius: 20px; }
+  .ecovision-workspace .upload-workspace { margin-inline: 12px; }
+  .ecovision-workspace .upload-workspace-grid { padding: 10px; gap: 12px; }
+}

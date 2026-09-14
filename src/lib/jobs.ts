@@ -1,6 +1,6 @@
 "use client";
 
-import { apiRequest, type Page } from "@/lib/api-client";
+import { ApiError, apiRequest, type Page } from "@/lib/api-client";
 import type { AnalysisJobApiStatus } from "@/lib/analysis";
 
 export interface Job {
@@ -61,5 +61,13 @@ export async function listProjectJobs(projectId: string, token?: string) {
     )
   ).items;
 }
-export const getInferenceResult = (jobId: string, token?: string) => apiRequest<InferenceResult>(`/results/${encodeURIComponent(jobId)}`, token);
+export async function getInferenceResult(jobId: string, token?: string) {
+  const result = await apiRequest<InferenceResult>(
+    `/results/${encodeURIComponent(jobId)}`, token, { cache: "no-store" },
+  );
+  if (result.jobId !== jobId) {
+    throw new ApiError(502, "The analysis result could not be verified.");
+  }
+  return result;
+}
 export const getAdminStats = (token?: string) => apiRequest<AdminStats>("/admin/stats", token);

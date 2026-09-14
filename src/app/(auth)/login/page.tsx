@@ -1,5 +1,7 @@
 "use client";
 
+import { hasAllowedGroup } from "@/lib/auth-roles";
+
 import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { InputLogin } from "@/components/ui/input";
@@ -147,11 +149,7 @@ export default function LoginPage() {
         ? accessGroups
         : [];
 
-    const allowedGroups = ["Admin", "Researcher", "Developer", "Ecologist"];
-
-    const hasAllowedRole = groups.some((group) =>
-      allowedGroups.includes(group as string),
-    );
+    const hasAllowedRole = hasAllowedGroup(groups);
 
     if (hasAllowedRole) {
       router.replace("/dashboard");
@@ -222,7 +220,7 @@ export default function LoginPage() {
         return;
       }
 
-      setError(message);
+      setError("Sign in failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -264,7 +262,7 @@ export default function LoginPage() {
 
       setError(`Unsupported sign-in step: ${nextStep}`);
     } catch (err: {} | any) {
-      setError(err?.message ?? "Password reset failed. Please try again.");
+      setError("Password reset failed. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -14,7 +14,7 @@ import { UploadQueue } from "./upload-queue";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateJob, useProjectUploads } from "@/hooks/useAnalysisQueries";
 import { usePresignedUpload } from "@/hooks/usePresignedUpload";
-import { ApiError } from "@/lib/api-client";
+import { analysisSubmissionError, createAnalysisSubmissionGuard } from "./analysis-submission";
 import { getUploadPreview } from "@/lib/uploads";
 import type {
   ProjectUpload,
@@ -39,6 +39,12 @@ export function UploadDashboard({
   const projectUploadsQuery = useProjectUploads(projectId);
   const refetchProjectUploads = projectUploadsQuery.refetch;
   const createJobMutation = useCreateJob();
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+  const analysisSubmissionGuard = useRef(createAnalysisSubmissionGuard());
   const initialFiles = initialUploadedFiles ?? [];
   const previewUrlsRef = useRef<Set<string>>(new Set());
   const previewRequestsRef = useRef<Map<string, Promise<void>>>(new Map());
@@ -216,27 +222,30 @@ export function UploadDashboard({
 
   const runAnalysis = useCallback(
     async (file: UploadQueueFile) => {
-      if (!file.uploadId || createJobMutation.isPending) return;
+      if (!projectUploadsQuery.isFetchedAfterMount || projectUploadsQuery.isError ||
+          projectUploadsQuery.isFetching || !file.uploadId ||
+          !analysisSubmissionGuard.current.claim(file)) return;
+      let accepted = false;
       setAnalysisErrors((current) => ({ ...current, [file.id]: "" }));
       try {
         const job = await createJobMutation.mutateAsync(file.uploadId);
-        updateFile(file.clientUploadId, { jobId: job.id });
-        router.push(`/results/${job.id}`);
+        accepted = true;
+        if (mountedRef.current) {
+          updateFile(file.clientUploadId, { jobId: job.id });
+          router.push(`/results/${job.id}`);
+        }
       } catch (error) {
-        const unavailable =
-          error instanceof ApiError &&
-          (error.status === 404 ||
-            error.status === 405 ||
-            (error.status === 409 && /active model/i.test(error.message)));
+        if (!mountedRef.current) return;
         setAnalysisErrors((current) => ({
           ...current,
-          [file.id]: unavailable
-            ? "Analysis service is not yet available."
-            : "EcoVision could not start this analysis. Please try again.",
+          [file.id]: analysisSubmissionError(error),
         }));
+      } finally {
+        analysisSubmissionGuard.current.finish(file.uploadId, accepted);
       }
     },
-    [createJobMutation, router, updateFile],
+    [createJobMutation, router, updateFile, projectUploadsQuery.isFetchedAfterMount,
+      projectUploadsQuery.isError, projectUploadsQuery.isFetching],
   );
 
   const activeFile = useMemo(
@@ -265,8 +274,8 @@ export function UploadDashboard({
           </h2>
         </div>
       )}
-      <div className="overflow-hidden  " style={{ fontFamily: T.sans }}>
-        <div className="grid min-h-[680px] grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_340px]">
+      <div className="upload-workspace overflow-hidden" style={{ fontFamily: T.sans }}>
+        <div className="upload-workspace-grid grid min-h-[680px] grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_340px]">
           <UploadQueue
             files={queueFiles}
             selectedId={selectedId}
@@ -335,12 +344,15 @@ export function UploadDashboard({
               onCancelUpload={uploadController.cancelActive}
               onRemove={removeFile}
               onPreviewNeeded={ensureUploadPreview}
-              onRunAnalysis={runAnalysis}
+              onRunAnalysis={projectUploadsQuery.isFetchedAfterMount &&
+                !projectUploadsQuery.isFetching && !projectUploadsQuery.isError
+                ? runAnalysis : undefined}
               analysisSubmitting={
-                createJobMutation.isPending &&
-                createJobMutation.variables === activeFile?.uploadId
+                createJobMutation.isPending
               }
-              analysisError={activeFile ? analysisErrors[activeFile.id] : undefined}
+              analysisError={projectUploadsQuery.isError
+                ? "Analysis state is temporarily unavailable. Please refresh to try again."
+                : activeFile ? analysisErrors[activeFile.id] : undefined}
             />
           </div>
         </div>
@@ -537,7 +549,7 @@ function isPreviewCandidate(file: File) {
   );
 }
 
-function mergeProjectUploads(
+export function mergeProjectUploads(
   currentFiles: UploadQueueFile[],
   uploads: ProjectUpload[],
   projectId: string,

@@ -1,6 +1,6 @@
 import type { UploadQueueFile, UploadStatus } from "./upload-types";
 
-export const uploadTheme = { cream: "#F7F5F0", paper: "#F0EDE6", warm: "#E8E3D8", border: "rgba(0,0,0,0.07)", ink: "#16180F", inkSoft: "#3A3D2C", muted: "#8A8878", moss: "#2B4D0E", leaf: "#3D7A12", lime: "#6CC02A", dark: "#0E1409", blue: "#4AB8D4", amber: "#F5A623", red: "#E8523A", serif: "'Instrument Serif', Georgia, serif", sans: "'Geist', system-ui, sans-serif", mono: "'Geist Mono', 'Courier New', monospace" };
+export const uploadTheme = { cream: "var(--workspace-paper, #F7F5F0)", paper: "var(--workspace-panel, #F0EDE6)", warm: "var(--workspace-subtle, #E8E3D8)", border: "rgba(0,0,0,0.07)", ink: "var(--workspace-ink, #16180F)", inkSoft: "var(--workspace-secondary, #3A3D2C)", muted: "var(--workspace-muted, #8A8878)", moss: "#2B4D0E", leaf: "#3D7A12", lime: "#6CC02A", dark: "#0E1409", blue: "#4AB8D4", amber: "#F5A623", red: "#E8523A", serif: "var(--workspace-font, 'Instrument Serif', Georgia, serif)", sans: "var(--workspace-font, 'Geist', system-ui, sans-serif)", mono: "var(--workspace-font, 'Geist Mono', monospace)" };
 
 export const statusMeta: Record<UploadStatus, { label: string; color: string; bg: string }> = {
   selected: { label: "Selected", color: uploadTheme.muted, bg: "rgba(138,136,120,0.1)" },

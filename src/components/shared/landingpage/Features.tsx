@@ -35,14 +35,14 @@ export default function Features() {
                     <div className="w-3 h-3 bg-veg-spartina rounded-sm"></div>
                     Spartina maritima
                   </div>
-                  <span className="data-mono">IoU: 0.90</span>
+                  <span className="data-mono">IoU: unavailable</span>
                 </div>
                 <div className="flex items-center justify-between text-sm p-2 bg-surface rounded border border-border">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-veg-puccinellia rounded-sm"></div>
                     Puccinellia maritima
                   </div>
-                  <span className="data-mono">IoU: 0.77</span>
+                  <span className="data-mono">IoU: unavailable</span>
                 </div>
               </div>
             </div>
@@ -65,12 +65,9 @@ export default function Features() {
             </p>
             <div className="mt-auto bg-surface p-4 rounded border border-border">
               <div className="text-label-xs text-secondary mb-2 uppercase">
-                90% Confidence Interval
+                Confidence interval unavailable
               </div>
-              <div className="w-full h-2 bg-surface-overlay rounded-full relative mb-1">
-                <div className="absolute left-[20%] right-[30%] h-full bg-brand-accent rounded-full"></div>
-                <div className="absolute left-[45%] w-1 h-3 -mt-0.5 bg-brand-secondary rounded-full"></div>
-              </div>
+              <div className="w-full h-2 bg-surface-overlay rounded-full relative mb-1" aria-hidden="true" />
               <div className="flex justify-between data-mono text-[10px] text-muted">
                 <span>Lower bound</span>
                 <span>Estimate</span>

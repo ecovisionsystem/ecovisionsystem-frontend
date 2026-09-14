@@ -12,6 +12,7 @@ export type AnalysisJobApiStatus =
   | "cancelled";
 
 export type AnalysisJobStatus =
+  | "unknown"
   | "queued"
   | "processing"
   | "completed"
@@ -49,8 +50,9 @@ export function normalizeAnalysisStatus(status: string): AnalysisJobStatus {
     case "cancelled":
       return "cancelled";
     case "failed":
-    default:
       return "failed";
+    default:
+      return "unknown";
   }
 }
 
@@ -74,10 +76,37 @@ export interface DominanceValue {
   mean: number;
 }
 
+export function isValidDominanceMean(value: number) {
+  return Number.isFinite(value) && value >= 0 && value <= 1;
+}
+
+export function formatDominancePercent(value: number) {
+  return isValidDominanceMean(value) ? `${(value * 100).toFixed(1)}%` : "Unavailable";
+}
+
 export function dominantSpecies<T extends DominanceValue>(stats: T[]) {
   return stats.reduce<T | null>((dominant, current) => {
-    if (!Number.isFinite(current.mean)) return dominant;
+    if (!isValidDominanceMean(current.mean)) return dominant;
     if (!dominant || current.mean > dominant.mean) return current;
     return dominant;
   }, null);
+}
+
+
+export function groupAnalysisStatusCounts(counts: Record<string, number>) {
+  const groups = new Map<AnalysisJobStatus, { status: string; count: number }>();
+  for (const [status, count] of Object.entries(counts)) {
+    const key = normalizeAnalysisStatus(status);
+    const existing = groups.get(key);
+    if (existing) existing.count += count;
+    else groups.set(key, { status, count });
+  }
+  // Retain a backend status for the shared component; never invent a pipeline stage.
+  return Array.from(groups.values());
+}
+
+
+export function formatVegetationClass(value: string) {
+  const name = value.replace(/[_-]+/g, " ").trim().replace(/\s+/g, " ").toLowerCase();
+  return name.charAt(0).toUpperCase() + name.slice(1);
 }

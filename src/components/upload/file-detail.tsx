@@ -11,7 +11,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { AnalysisStatus } from "@/components/analysis/analysis-status";
+import { AnalysisStatus, analysisStatusLabel } from "@/components/analysis/analysis-status";
 import { Button } from "@/components/ui/button";
 import { useJob } from "@/hooks/useAnalysisQueries";
 import { shortJobReference } from "@/lib/analysis";
@@ -251,13 +251,20 @@ function AnalysisTab({
   if (file.jobId) {
     return (
       <div className="space-y-4">
-        {jobQuery.data ? (
-          <AnalysisStatus status={jobQuery.data.status} />
+        {jobQuery.error ? (
+          <ErrorNotice message="Analysis state is temporarily unavailable." />
+        ) : jobQuery.data ? (
+          <AnalysisStatus jobId={jobQuery.data.id} status={jobQuery.data.status} />
         ) : jobQuery.isLoading ? (
           <p className="text-sm text-text-secondary">Loading analysis state…</p>
         ) : (
           <ErrorNotice message="Analysis state is temporarily unavailable." />
         )}
+        <Button type="button" className="w-full" disabled>
+          {jobQuery.error || !jobQuery.data
+            ? "Status unavailable"
+            : analysisStatusLabel(jobQuery.data.status)}
+        </Button>
         <p className="text-xs text-text-muted">
           Reference: {shortJobReference(file.jobId)}
         </p>
@@ -290,10 +297,11 @@ function AnalysisTab({
         type="button"
         className="w-full"
         loading={submitting}
+        aria-busy={submitting}
         disabled={!file.uploadId || !onRunAnalysis}
         onClick={() => onRunAnalysis?.(file)}
       >
-        {submitting ? "Submitting…" : "Run Analysis"}
+        {submitting ? "Starting…" : "Run Analysis"}
       </Button>
     </div>
   );
@@ -316,8 +324,10 @@ function ResultsTab({ file }: { file: UploadQueueFile }) {
 
   return (
     <div className="space-y-4">
-      {jobQuery.data ? (
-        <AnalysisStatus status={jobQuery.data.status} />
+      {jobQuery.error ? (
+        <ErrorNotice message="Analysis state is temporarily unavailable." />
+      ) : jobQuery.data ? (
+        <AnalysisStatus jobId={jobQuery.data.id} status={jobQuery.data.status} />
       ) : jobQuery.isLoading ? (
         <p className="text-sm text-text-secondary">Loading analysis state…</p>
       ) : (
@@ -362,7 +372,7 @@ function UploadState({
         </div>
       </div>
 
-      {file.errorMessage && <ErrorNotice message={file.errorMessage} />}
+      {file.errorMessage && <ErrorNotice message="The upload could not be completed. Please try again." />}
 
       {(file.status === "selected" || file.status === "ready") && (
         <Button className="w-full" onClick={() => onStart?.(file)}>

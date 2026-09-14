@@ -8,6 +8,8 @@ export const queryKeys = {
       ["projects", scope, projectId] as const,
   },
   uploads: {
+    detail: (scope: string, uploadId: string) =>
+      ["uploads", scope, uploadId] as const,
     project: (scope: string, projectId: string) =>
       ["uploads", scope, "project", projectId] as const,
     preview: (scope: string, uploadId: string) =>

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { T } from "@/styles/style";
-import { Counter, Fade, HoverButton, useInView } from "./utils";
+import { Fade, HoverButton, useInView } from "./utils";
 
 const images = {
   wetland:
@@ -38,11 +38,11 @@ export default function LandingComparisonV2Sections() {
 function V2MetricsStrip() {
   const [ref, inView] = useInView();
   const stats = [
-    { val: 96.2, suf: "%", lbl: "Pixel Accuracy", sub: "SegFormer-B5" },
-    { val: 99, suf: "%", lbl: "Species Classification", sub: "ConvNeXt-Base" },
-    { val: 8, suf: "%", lbl: "Dominance Error (MAE)", sub: "Field-validated" },
-    { val: 2, suf: "cm", lbl: "Ground Sampling Distance", sub: "UAV imagery" },
-    { val: 6, suf: "x", lbl: "Survey Speed vs. Manual", sub: "Per hectare" },
+    { lbl: "Pixel Accuracy", sub: "SegFormer-B5" },
+    { lbl: "Species Classification", sub: "ConvNeXt-Base" },
+    { lbl: "Dominance Error (MAE)", sub: "Not yet verified" },
+    { lbl: "Ground Sampling Distance", sub: "UAV imagery" },
+    { lbl: "Survey Speed vs. Manual", sub: "Per hectare" },
   ];
 
   return (
@@ -81,15 +81,7 @@ function V2MetricsStrip() {
                 lineHeight: 1,
               }}
             >
-              {inView ? (
-                <Counter
-                  end={stat.val}
-                  suffix={stat.suf}
-                  decimals={stat.val === 96.2 ? 1 : 0}
-                />
-              ) : (
-                `0${stat.suf}`
-              )}
+              —
             </div>
             <div
               style={{
@@ -109,7 +101,7 @@ function V2MetricsStrip() {
                 letterSpacing: 1,
               }}
             >
-              {stat.sub}
+              Not yet verified
             </div>
           </div>
         ))}
@@ -324,7 +316,7 @@ function V2Solution() {
       metrics: [
         "SegFormer-B5 backbone",
         "512x512 tiles",
-        "94.1% mIoU",
+        "mIoU not yet verified",
         "ADE20K pre-training",
       ],
       color: T.leaf,
@@ -337,7 +329,7 @@ function V2Solution() {
       metrics: [
         "ConvNeXt-Base",
         "Blob-level verification",
-        "99.0% accuracy",
+        "Accuracy not yet verified",
         "Ecotone disambiguation",
       ],
       color: "#4AB8D4",
@@ -349,7 +341,7 @@ function V2Solution() {
       body: "Purpose-built ecological metrics produce geospatial outputs for reporting and field validation.",
       metrics: [
         "Vegetated-area normalised",
-        "MAE < 8%",
+        "MAE not yet verified",
         "GeoJSON export",
         "Per-polygon scoring",
       ],
@@ -518,10 +510,10 @@ function Research() {
           <Fade delay={0.15}>
             <div className="mt-9 grid grid-cols-2 gap-3">
               {[
-                ["96.2%", "Pixel accuracy"],
-                ["99.0%", "Species classification"],
-                ["0.56", "Mean IoU"],
-                ["<8%", "Dominance MAE"],
+                ["—", "Pixel accuracy · unverified"],
+                ["—", "Species classification · unverified"],
+                ["—", "Mean IoU · unverified"],
+                ["—", "Dominance MAE · unverified"],
               ].map(([value, label]) => (
                 <div
                   key={label}
@@ -667,39 +659,14 @@ function V2Architecture() {
 
 function LiveDemo() {
   const [view, setView] = useState("segmentation");
-  const [running, setRunning] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [tick, setTick] = useState(0);
-
-  const runInference = useCallback(() => {
-    setRunning(true);
-    setProgress(0);
-    let next = 0;
-    const interval = window.setInterval(() => {
-      next += 1.8;
-      setProgress(Math.min(next, 100));
-      if (next >= 100) {
-        window.clearInterval(interval);
-        setRunning(false);
-      }
-    }, 40);
-  }, []);
-
-  useEffect(() => {
-    const interval = window.setInterval(
-      () => setTick((current) => current + 1),
-      100,
-    );
-    return () => window.clearInterval(interval);
-  }, []);
 
   return (
     <section className="lcv2-section" style={{ background: T.paper }}>
       <div className="lcv2-container">
         <Fade>
-          <p className="lcv2-kicker">Live AI Visualization</p>
+          <p className="lcv2-kicker">Analysis views</p>
           <h2 className="lcv2-title" style={{ maxWidth: 620 }}>
-            Watch the intelligence in motion.
+            Explore your saved analysis results.
           </h2>
         </Fade>
         <Fade delay={0.1}>
@@ -751,34 +718,10 @@ function LiveDemo() {
               >
                 ecovision.app/inference - {view}
               </div>
-              <button
-                type="button"
-                onClick={runInference}
-                disabled={running}
-                style={{
-                  fontFamily: T.mono,
-                  fontSize: 10,
-                  color: running ? "#aaa" : T.moss,
-                  border: `1px solid ${running ? "#ddd" : T.moss}`,
-                  background: "transparent",
-                  borderRadius: 8,
-                  padding: "4px 12px",
-                }}
-              >
-                {running ? "Running..." : "Run Inference"}
-              </button>
+              <a href="/dashboard/projects" style={{ fontFamily: T.mono, fontSize: 10, color: T.moss, border: `1px solid ${T.moss}`, borderRadius: 8, padding: "4px 12px" }}>
+                Open project
+              </a>
             </div>
-            {running && (
-              <div style={{ height: 2, background: "rgba(0,0,0,.06)" }}>
-                <div
-                  style={{
-                    height: "100%",
-                    width: `${progress}%`,
-                    background: `linear-gradient(90deg,${T.leaf},${T.lime})`,
-                  }}
-                />
-              </div>
-            )}
             <div
               style={{
                 height: 480,
@@ -787,245 +730,14 @@ function LiveDemo() {
                 overflow: "hidden",
               }}
             >
-              {view === "heatmap" ? (
-                <HeatmapView />
-              ) : view === "confidence" ? (
-                <ConfidenceView />
-              ) : (
-                <SegmentationView
-                  beforeAfter={view === "beforeafter"}
-                  tick={tick}
-                />
-              )}
+              <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-white/60">
+                No {view} result selected. Open a completed analysis to view its saved artifacts.
+              </div>
             </div>
           </div>
         </Fade>
       </div>
     </section>
-  );
-}
-
-function SegmentationView({
-  beforeAfter,
-  tick,
-}: {
-  beforeAfter?: boolean;
-  tick: number;
-}) {
-  const blobs = [
-    {
-      x: "8%",
-      y: "15%",
-      w: "25%",
-      h: "22%",
-      c: "rgba(74,158,28,.45)",
-      label: "S. maritima",
-      conf: "96.2%",
-    },
-    {
-      x: "36%",
-      y: "10%",
-      w: "28%",
-      h: "26%",
-      c: "rgba(43,107,8,.40)",
-      label: "P. maritima",
-      conf: "93.8%",
-    },
-    {
-      x: "68%",
-      y: "18%",
-      w: "22%",
-      h: "20%",
-      c: "rgba(74,158,28,.42)",
-      label: "S. maritima",
-      conf: "97.1%",
-    },
-    {
-      x: "42%",
-      y: "52%",
-      w: "26%",
-      h: "24%",
-      c: "rgba(43,107,8,.38)",
-      label: "P. maritima",
-      conf: "94.5%",
-    },
-  ];
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        display: beforeAfter ? "grid" : "block",
-        gridTemplateColumns: beforeAfter ? "1fr 1fr" : undefined,
-      }}
-    >
-      {beforeAfter && (
-        <img
-          src={images.marsh}
-          alt=""
-          loading="lazy"
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            filter: "brightness(.65) saturate(.55)",
-          }}
-        />
-      )}
-      <div style={{ position: "relative", overflow: "hidden" }}>
-        <img
-          src={images.marsh}
-          alt=""
-          loading="lazy"
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            filter: "brightness(.4) saturate(.7)",
-          }}
-        />
-        {blobs.map((blob, index) => (
-          <div
-            key={index}
-            style={{
-              position: "absolute",
-              left: blob.x,
-              top: blob.y,
-              width: blob.w,
-              height: blob.h,
-              background: blob.c,
-              border: "1.5px solid rgba(108,192,42,.72)",
-              borderRadius: 10,
-              animation: `lcv2FadeInPatch .5s ease ${0.4 + index * 0.1}s both`,
-            }}
-          >
-            <span
-              style={{
-                position: "absolute",
-                top: 6,
-                left: 6,
-                background: "rgba(0,0,0,.72)",
-                borderRadius: 5,
-                padding: "3px 8px",
-                color: "#fff",
-                fontFamily: T.mono,
-                fontSize: 9,
-              }}
-            >
-              {blob.label}{" "}
-              <strong style={{ color: T.lime }}>{blob.conf}</strong>
-            </span>
-          </div>
-        ))}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            height: 1.5,
-            background: `linear-gradient(90deg,transparent,${T.lime},transparent)`,
-            animation: "lcv2ScanLine 2.8s ease-in-out infinite",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: "50%",
-            top: "50%",
-            width: 24,
-            height: 24,
-            border: `1px solid ${T.lime}`,
-            borderRadius: "50%",
-            animation: "lcv2CrosshairPulse 2s ease-in-out infinite",
-          }}
-        />
-        <span
-          style={{
-            position: "absolute",
-            right: 14,
-            bottom: 14,
-            color: T.lime,
-            fontFamily: T.mono,
-            fontSize: 10,
-          }}
-        >
-          tick {tick}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function HeatmapView() {
-  return (
-    <svg
-      width="100%"
-      height="100%"
-      viewBox="0 0 800 480"
-      preserveAspectRatio="xMidYMid slice"
-    >
-      <defs>
-        <radialGradient id="v2h1">
-          <stop offset="0%" stopColor="#FF4444" stopOpacity=".8" />
-          <stop offset="100%" stopColor="#FF4444" stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id="v2h2">
-          <stop offset="0%" stopColor="#FF8C00" stopOpacity=".7" />
-          <stop offset="100%" stopColor="#FF8C00" stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id="v2h3">
-          <stop offset="0%" stopColor={T.lime} stopOpacity=".65" />
-          <stop offset="100%" stopColor={T.lime} stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <rect width="800" height="480" fill="#0a1204" />
-      <ellipse cx="200" cy="180" rx="140" ry="110" fill="url(#v2h1)" />
-      <ellipse cx="480" cy="140" rx="160" ry="120" fill="url(#v2h2)" />
-      <ellipse cx="300" cy="340" rx="130" ry="100" fill="url(#v2h3)" />
-    </svg>
-  );
-}
-
-function ConfidenceView() {
-  const cells = Array.from(
-    { length: 20 * 12 },
-    (_, index) => 0.62 + ((index * 17) % 37) / 100,
-  );
-  return (
-    <div style={{ padding: 16, height: "100%" }}>
-      <p
-        style={{
-          fontFamily: T.mono,
-          fontSize: 9,
-          color: "rgba(255,255,255,.35)",
-          letterSpacing: 1.5,
-          marginBottom: 10,
-        }}
-      >
-        MODEL CONFIDENCE - PIXEL GRID
-      </p>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(20,1fr)",
-          gap: 3,
-          height: "calc(100% - 30px)",
-        }}
-      >
-        {cells.map((value, index) => (
-          <span
-            key={index}
-            style={{
-              background:
-                value > 0.9 ? T.lime : value > 0.8 ? T.leaf : "#F5A623",
-              borderRadius: 2,
-              opacity: value,
-            }}
-          />
-        ))}
-      </div>
-    </div>
   );
 }
 

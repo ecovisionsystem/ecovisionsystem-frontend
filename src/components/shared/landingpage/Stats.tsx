@@ -1,14 +1,14 @@
-import { Counter, useInView } from "@/lib/utils/helpers";
+import { useInView } from "@/lib/utils/helpers";
 import { landingComparisonTheme as L, T } from "@/styles/style";
 
 export default function StatsLandn() {
   const [ref, inView] = useInView();
   const stats = [
-    { val: 96.2, suf: "%", lbl: "Pixel Accuracy", sub: "SegFormer-B5" },
-    { val: 99, suf: "%", lbl: "Species Classification", sub: "ConvNeXt-Base" },
-    { val: 8, suf: "%", lbl: "Dominance Error (MAE)", sub: "Field-validated" },
-    { val: 2, suf: "cm", lbl: "Ground Sampling Distance", sub: "UAV imagery" },
-    { val: 6, suf: "x", lbl: "Survey Speed vs. Manual", sub: "Per hectare" },
+    { lbl: "Pixel Accuracy", sub: "SegFormer-B5" },
+    { lbl: "Species Classification", sub: "ConvNeXt-Base" },
+    { lbl: "Dominance Error (MAE)", sub: "Not yet verified" },
+    { lbl: "Ground Sampling Distance", sub: "UAV imagery" },
+    { lbl: "Survey Speed vs. Manual", sub: "Per hectare" },
   ];
 
   return (
@@ -47,15 +47,7 @@ export default function StatsLandn() {
                 lineHeight: 1,
               }}
             >
-              {inView ? (
-                <Counter
-                  end={stat.val}
-                  suffix={stat.suf}
-                  decimals={stat.val === 96.2 ? 1 : 0}
-                />
-              ) : (
-                `0${stat.suf}`
-              )}
+              —
             </div>
             <div
               style={{
@@ -75,7 +67,7 @@ export default function StatsLandn() {
                 letterSpacing: 1,
               }}
             >
-              {stat.sub}
+              Not yet verified
             </div>
           </div>
         ))}

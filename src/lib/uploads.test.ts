@@ -23,3 +23,8 @@ describe("uploadPreviewErrorMessage", () => {
     ).toBe("The image preview service is temporarily unavailable.");
   });
 });
+
+
+it.each(["500", "ClientError", "SQLAlchemy", "S3", "SQS", "ECS"])("does not expose raw preview failure %s", (diagnostic) => {
+  expect(uploadPreviewErrorMessage(new Error(diagnostic))).toBe("The uploaded image preview could not be loaded.");
+});

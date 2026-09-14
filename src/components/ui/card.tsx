@@ -17,7 +17,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          "bg-surface rounded-lg border border-border shadow-sm",
+          "workspace-card bg-surface rounded-lg border border-border shadow-sm",
           paddingClasses[padding],
           className,
         )}

@@ -23,7 +23,7 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
     <div
       ref={ref}
       className={cn(
-        "border-b border-border bg-surface-raised px-6 py-4",
+        "workspace-page-header border-b border-border bg-surface-raised px-6 py-4",
         className,
       )}
       {...props}

@@ -54,7 +54,7 @@ export function ProjectCreateModal({
       router.push(`/dashboard/projects/${project.id}`);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to create project.",
+        "Unable to create project. Please try again later.",
       );
     }
   };

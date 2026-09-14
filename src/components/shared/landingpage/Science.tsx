@@ -28,10 +28,10 @@ export default function Science() {
           />
           <div className="mt-10 grid grid-cols-2 gap-3">
             {[
-              ["96.2%", "Pixel accuracy"],
-              ["99.0%", "Species classification"],
-              ["0.941", "Mean IoU"],
-              ["<8%", "Dominance MAE"],
+              ["—", "Pixel accuracy · unverified"],
+              ["—", "Species classification · unverified"],
+              ["—", "Mean IoU · unverified"],
+              ["—", "Dominance MAE · unverified"],
             ].map(([value, label], index) => (
               <div
                 key={label}
