@@ -94,7 +94,7 @@ export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
         <Menu className="h-5 w-5" />
       </button>
 
-      <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-border bg-surface md:flex">
+      <aside className="workspace-sidebar fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-border bg-surface md:flex">
         <SidebarContent
           user={user}
           visibleItems={visibleItems}
@@ -110,7 +110,7 @@ export function AppSidebar({ user, onSignOut }: AppSidebarProps) {
             className="fixed inset-0 z-40 bg-black/40 md:hidden"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-border bg-surface shadow-xl md:hidden">
+          <aside className="workspace-sidebar fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-border bg-surface shadow-xl md:hidden">
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
@@ -150,12 +150,12 @@ function SidebarContent({
 }: SidebarContentProps) {
   return (
     <>
-      <div className="border-b border-border px-5 py-6">
+      <div className="workspace-brand border-b border-border px-5 py-6">
         <h1 className="text-lg font-semibold text-brand-primary">ecoVision</h1>
         <p className="text-xs text-text-secondary">2.0</p>
       </div>
 
-      <nav className="flex-1 px-3 py-4">
+      <nav className="workspace-navigation flex-1 px-3 py-4">
         <div className="space-y-1">
           {visibleItems.slice(0, 1).map((item) => {
             const Icon = item.icon;
@@ -238,8 +238,8 @@ function SidebarContent({
       </nav>
 
       {user && (
-        <div className="border-t border-border p-3">
-          <div className="mb-3 flex items-center gap-3 rounded-md px-3 py-2">
+        <div className="workspace-account border-t border-border p-3">
+          <div className="workspace-profile mb-3 flex items-center gap-3 rounded-md px-3 py-2">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-primary text-sm font-semibold text-white">
               {getInitials(user.name)}
             </div>
@@ -256,7 +256,7 @@ function SidebarContent({
           <button
             type="button"
             onClick={onSignOut}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-error transition-colors hover:bg-error-bg"
+            className="workspace-signout flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-error transition-colors hover:bg-error-bg"
           >
             <LogOut className="h-4 w-4" />
             Sign out

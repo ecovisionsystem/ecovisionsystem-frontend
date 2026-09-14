@@ -1,8 +1,14 @@
 import { AlertCircle, CheckCircle2, Clock3, Loader2, XCircle } from "lucide-react";
-import { normalizeAnalysisStatus } from "@/lib/analysis";
+import { normalizeAnalysisStatus, shortJobReference, type AnalysisJobStatus } from "@/lib/analysis";
 import { cn } from "@/lib/utils";
 
 const statusContent = {
+  unknown: {
+    label: "Status unavailable",
+    detail: "The analysis status could not be determined.",
+    icon: AlertCircle,
+    className: "border-border bg-surface-overlay text-text-secondary",
+  },
   queued: {
     label: "Queued",
     detail: "Analysis is waiting to start.",
@@ -23,7 +29,7 @@ const statusContent = {
   },
   failed: {
     label: "Failed",
-    detail: "EcoVision could not complete this analysis.",
+    detail: "Analysis could not be completed.",
     icon: AlertCircle,
     className: "border-error/25 bg-error-bg text-error",
   },
@@ -33,14 +39,25 @@ const statusContent = {
     icon: XCircle,
     className: "border-border bg-surface-overlay text-text-secondary",
   },
-} as const;
+} as const satisfies Record<AnalysisJobStatus, {
+  label: string;
+  detail: string;
+  icon: typeof AlertCircle;
+  className: string;
+}>;
+
+export function analysisStatusLabel(status: string): string {
+  return statusContent[normalizeAnalysisStatus(status)].label;
+}
 
 export function AnalysisStatus({
   status,
   compact = false,
+  jobId,
 }: {
   status: string;
   compact?: boolean;
+  jobId?: string;
 }) {
   const normalized = normalizeAnalysisStatus(status);
   const content = statusContent[normalized];
@@ -62,7 +79,10 @@ export function AnalysisStatus({
       />
       <div className="min-w-0">
         <p className="text-sm font-semibold">{content.label}</p>
-        {!compact && <p className="text-xs opacity-80">{content.detail}</p>}
+        {(!compact || normalized === "failed") && <p className="text-xs opacity-80">{content.detail}</p>}
+        {normalized === "failed" && jobId && (
+          <p className="text-xs opacity-80">Reference: {shortJobReference(jobId)}</p>
+        )}
       </div>
     </div>
   );

@@ -88,7 +88,7 @@ export function usePresignedUpload({
       }
       onUpdate(file.clientUploadId, {
         status: "failed",
-        errorMessage: error instanceof Error ? error.message : "Upload failed.",
+        errorMessage: "The upload could not be completed. Please try again.",
         canResume: false,
       });
     },

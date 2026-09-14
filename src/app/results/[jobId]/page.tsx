@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Download, ImageOff } from "lucide-react";
+import { Download } from "lucide-react";
 import { useParams } from "next/navigation";
+import { ResultImageViewer } from "@/components/analysis/result-image-viewer";
 import { AnalysisStatus } from "@/components/analysis/analysis-status";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Card } from "@/components/ui/card";
@@ -11,16 +12,19 @@ import { useAuth, useRequireAuth } from "@/hooks/useAuth";
 import {
   useJob,
   useJobResult,
+  useProject,
+  useUpload,
   useUploadPreview,
 } from "@/hooks/useAnalysisQueries";
 import {
+  formatDominancePercent,
   dominantSpecies,
+  formatVegetationClass,
+  isValidDominanceMean,
   normalizeAnalysisStatus,
   shortJobReference,
 } from "@/lib/analysis";
 import { ApiError } from "@/lib/api-client";
-
-type ImageView = "original" | "overlay" | "segmentation";
 
 export default function ResultsPage() {
   const { user, isLoading, signOut } = useAuth();
@@ -31,13 +35,8 @@ export default function ResultsPage() {
     : undefined;
   const resultQuery = useJobResult(jobId, jobState === "completed");
   const previewQuery = useUploadPreview(jobQuery.data?.uploadId);
-  const [view, setView] = React.useState<ImageView>("original");
 
   useRequireAuth();
-
-  React.useEffect(() => {
-    if (resultQuery.data?.artifacts.overlayImageUrl) setView("overlay");
-  }, [resultQuery.data?.artifacts.overlayImageUrl]);
 
   if (isLoading || jobQuery.isLoading) {
     return (
@@ -94,14 +93,15 @@ export default function ResultsPage() {
           <JobState job={job} />
         ) : resultQuery.isLoading ? (
           <Card>
-            <AnalysisStatus status={job.status} />
+            <AnalysisStatus jobId={job.id} status={job.status} />
             <p className="mt-4 text-sm text-text-secondary">
               Loading the persisted analysis result…
             </p>
           </Card>
         ) : resultQuery.error || !resultQuery.data ? (
           <Card className="border-warning/25 bg-warning-bg">
-            <h2 className="font-semibold text-text-primary">
+            <AnalysisStatus jobId={job.id} status={job.status} />
+            <h2 className="mt-4 font-semibold text-text-primary">
               Result is not available yet
             </h2>
             <p className="mt-2 text-sm text-text-secondary">
@@ -111,11 +111,10 @@ export default function ResultsPage() {
           </Card>
         ) : (
           <CompletedResult
+            status={job.status}
             result={resultQuery.data}
             originalUrl={previewQuery.data?.previewUrl}
             previewError={Boolean(previewQuery.error)}
-            view={view}
-            onViewChange={setView}
             reference={reference}
           />
         )}
@@ -126,41 +125,55 @@ export default function ResultsPage() {
 
 function JobState({ job }: { job: NonNullable<ReturnType<typeof useJob>["data"]> }) {
   const state = normalizeAnalysisStatus(job.status);
+  const projectQuery = useProject(job.projectId);
+  const uploadQuery = useUpload(job.uploadId);
+  const active = state === "queued" || state === "processing";
+  const projectName = projectQuery.error ? "Project unavailable"
+    : projectQuery.data?.name ?? (projectQuery.isLoading ? "Loading project…" : "Project unavailable");
+  const filename = uploadQuery.error ? "Filename unavailable"
+    : uploadQuery.data?.filename ?? (uploadQuery.isLoading ? "Loading filename…" : "Filename unavailable");
+
   return (
     <Card padding="lg" className="max-w-3xl">
-      <AnalysisStatus status={job.status} />
-      {(state === "failed" || state === "cancelled") && (
-        <div className="mt-5">
-          <p className="text-sm text-text-secondary">
-            Reference: {shortJobReference(job.id)}
-          </p>
-          {state === "failed" && job.errorMessage && (
-            <p className="mt-2 text-sm text-error">
-              EcoVision could not complete this analysis.
-            </p>
-          )}
+      {active && (
+        <h2 className="mb-6 text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">
+          {state === "processing"
+            ? "EcoVision is analysing your imagery"
+            : "Your analysis is queued"}
+        </h2>
+      )}
+      <dl className="space-y-4 text-sm">
+        <InfoRow label="Project" value={projectName} />
+        <InfoRow label="Image filename" value={filename} />
+        <InfoRow label="Job reference" value={shortJobReference(job.id)} />
+        <div className="border-t border-border pt-4">
+          <dt className="mb-2 text-text-secondary">Current state</dt>
+          <dd><AnalysisStatus jobId={job.id} status={job.status} /></dd>
         </div>
+      </dl>
+      {active && (
+        <p className="mt-6 rounded-lg bg-surface-overlay p-4 text-sm text-text-secondary">
+          You can leave this page. Analysis will continue.
+        </p>
       )}
     </Card>
   );
 }
 
 function CompletedResult({
+  status,
   result,
   originalUrl,
   previewError,
-  view,
-  onViewChange,
   reference,
 }: {
+  status: string;
   result: NonNullable<ReturnType<typeof useJobResult>["data"]>;
   originalUrl?: string;
   previewError: boolean;
-  view: ImageView;
-  onViewChange: (view: ImageView) => void;
   reference: string;
 }) {
-  const views: Array<{ id: ImageView; label: string; url?: string | null }> = [
+  const views = [
     { id: "original", label: "Original", url: originalUrl },
     { id: "overlay", label: "Overlay", url: result.artifacts.overlayImageUrl },
     {
@@ -169,8 +182,6 @@ function CompletedResult({
       url: result.artifacts.segmentationMaskUrl,
     },
   ];
-  const availableViews = views.filter((item) => Boolean(item.url));
-  const selected = availableViews.find((item) => item.id === view) ?? availableViews[0];
   const dominant = dominantSpecies(result.dominanceStats);
   const downloads = [
     ["Download Overlay", result.artifacts.overlayImageUrl],
@@ -185,7 +196,7 @@ function CompletedResult({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-secondary">
-              Dominant species
+              Dominant Species
             </p>
             {dominant ? (
               <>
@@ -193,17 +204,17 @@ function CompletedResult({
                   {formatVegetationClass(dominant.vegetationClass)}
                 </h2>
                 <p className="mt-1 text-3xl font-bold text-brand-primary">
-                  {formatPercent(dominant.mean)}
+                  {formatDominancePercent(dominant.mean)}
                 </p>
               </>
             ) : (
               <p className="mt-2 text-sm text-text-secondary">
-                No dominance data was returned.
+                No valid dominance data was returned.
               </p>
             )}
           </div>
-          <div className="text-right text-sm text-text-secondary">
-            <p>Legacy Pixel-Based Dominance</p>
+          <div className="space-y-2 text-right text-sm text-text-secondary">
+            <AnalysisStatus status={status} compact />
             <p className="mt-1">Model {result.modelVersion}</p>
           </div>
         </div>
@@ -211,40 +222,7 @@ function CompletedResult({
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.7fr)]">
         <Card padding="sm">
-          <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label="Analysis image view">
-            {availableViews.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                role="tab"
-                aria-selected={selected?.id === item.id}
-                onClick={() => onViewChange(item.id)}
-                className={`rounded-md px-3 py-2 text-sm font-medium ${
-                  selected?.id === item.id
-                    ? "bg-brand-primary text-white"
-                    : "bg-surface-overlay text-text-secondary"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-          {selected?.url ? (
-            <div className="flex min-h-[360px] items-center justify-center overflow-hidden rounded-lg bg-black">
-              <img
-                src={selected.url}
-                alt={`${selected.label} analysis view`}
-                className="max-h-[70vh] w-full object-contain"
-              />
-            </div>
-          ) : (
-            <div className="flex min-h-[360px] flex-col items-center justify-center rounded-lg bg-surface-overlay text-text-secondary">
-              <ImageOff className="h-8 w-8" />
-              <p className="mt-2 text-sm">
-                {previewError ? "Original preview unavailable." : "No image artifact was returned."}
-              </p>
-            </div>
-          )}
+          <ResultImageViewer key={reference} views={views} previewError={previewError} />
         </Card>
 
         <div className="space-y-6">
@@ -255,15 +233,17 @@ function CompletedResult({
                 {result.dominanceStats.map((stat) => (
                   <div key={stat.vegetationClass}>
                     <div className="flex justify-between gap-3 text-sm">
-                      <span>{formatVegetationClass(stat.vegetationClass)}</span>
-                      <span>{formatPercent(stat.mean)}</span>
+                      <span className="italic">{formatVegetationClass(stat.vegetationClass)}</span>
+                      <span>{formatDominancePercent(stat.mean)}</span>
                     </div>
-                    <div className="mt-1 h-2 overflow-hidden rounded bg-surface-overlay">
-                      <div
-                        className="h-full rounded bg-brand-primary"
-                        style={{ width: `${Math.min(100, Math.max(0, stat.mean * 100))}%` }}
-                      />
-                    </div>
+                    {isValidDominanceMean(stat.mean) && (
+                      <div className="mt-1 h-2 overflow-hidden rounded bg-surface-overlay">
+                        <div
+                          className="h-full rounded bg-brand-primary"
+                          style={{ width: `${stat.mean * 100}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -278,8 +258,7 @@ function CompletedResult({
             <h3 className="font-semibold text-text-primary">Analysis information</h3>
             <dl className="mt-4 space-y-2 text-sm">
               <InfoRow label="Model" value={result.modelVersion} />
-              <InfoRow label="Analysis" value="Legacy Pixel-Based Dominance" />
-              <InfoRow label="Processed" value={new Date(result.processedAt).toLocaleString()} />
+              <InfoRow label="Processed" value={new Date(result.processedAt).toISOString().replace("T", " ").replace(".000Z", " UTC")} />
               <InfoRow label="Reference" value={reference} />
             </dl>
           </Card>
@@ -312,15 +291,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4">
       <dt className="text-text-secondary">{label}</dt>
-      <dd className="text-right text-text-primary">{value}</dd>
+      <dd className="min-w-0 break-words text-right text-text-primary">{value}</dd>
     </div>
   );
-}
-
-function formatVegetationClass(value: string) {
-  return value.replace(/[_-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
-function formatPercent(value: number) {
-  return `${(Math.max(0, value) * 100).toFixed(1)}%`;
 }

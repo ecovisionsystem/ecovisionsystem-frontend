@@ -31,19 +31,19 @@ export function AppShell({
   }, []);
 
   return (
-    <div className="flex h-screen bg-surface">
+    <div className="ecovision-workspace flex h-screen bg-surface">
       {/* Sidebar */}
       <AppSidebar user={user} onSignOut={onSignOut} collapsed={collapsed} />
 
       {/* Main Content */}
       <main
         className={cn(
-          "flex-1 overflow-y-auto",
+          "workspace-main flex-1 overflow-y-auto",
           !isMobile && !collapsed && "ml-64",
           !isMobile && collapsed && "ml-16",
         )}
       >
-        {children}
+        <div className="workspace-content">{children}</div>
       </main>
     </div>
   );

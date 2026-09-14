@@ -18,7 +18,7 @@ export default function HomePage() {
     <>
       <div className="bg-background text-on-background font-body-primary text-body-primary antialiased min-h-screen flex flex-col">
         <Header />
-        <main className="flex-grow">
+        <main className="flex-grow overflow-x-clip">
           <Hero />
           <ProblemSection />
           <Platform />

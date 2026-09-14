@@ -2,7 +2,7 @@
 
 import { useMounted } from "@/lib/utils/helpers";
 import { T } from "@/styles/style";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 //
 export default function Hero() {
@@ -216,7 +216,7 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* ── RIGHT — Live AI Panel ── */}
+        {/* ── RIGHT — Analysis Preview ── */}
         <div
           style={{
             height: "90vh",
@@ -320,52 +320,8 @@ function HeroBtn({
   );
 }
 
-/* Live AI inference panel — right side of hero */
+/* Analysis preview shell; no job is selected on the public landing page. */
 function HeroAIPanel() {
-  const [tick, setTick] = useState(0);
-  const [inferenceStep, setInferenceStep] = useState(0);
-  const [confidence, setConfidence] = useState(Array(6).fill(0));
-
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 80);
-    return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setInferenceStep((s) => (s + 1) % 4);
-      setConfidence(
-        Array(6)
-          .fill(0)
-          .map(() => 0.85 + Math.random() * 0.13),
-      );
-    }, 2200);
-    return () => clearInterval(id);
-  }, []);
-
-  const species = [
-    {
-      name: "Spartina maritima",
-      color: "#4A9E1C",
-      conf: confidence[0] || 0.96,
-    },
-    {
-      name: "Puccinellia maritima",
-      color: "#2B6B08",
-      conf: confidence[1] || 0.93,
-    },
-    { name: "Mixed / Ecotone", color: "#8CC840", conf: confidence[2] || 0.88 },
-    { name: "Bare substrate", color: "#B8A882", conf: confidence[3] || 0.97 },
-    { name: "Water / Tidal", color: "#4A90B8", conf: confidence[4] || 0.99 },
-  ];
-
-  const inferenceStages = [
-    "Encoding tiles…",
-    "Segmenting…",
-    "Classifying blobs…",
-    "Scoring dominance…",
-  ];
-
   return (
     <div
       style={{
@@ -410,7 +366,7 @@ function HeroAIPanel() {
             borderRadius: 20,
           }}
         >
-          ECOVISION — INFERENCE ENGINE v2.0
+          ECOVISION — ANALYSIS PREVIEW
         </span>
         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
           <span
@@ -420,35 +376,22 @@ function HeroAIPanel() {
               borderRadius: "50%",
               background: T.lime,
               display: "inline-block",
-              animation: "pulse 1.8s infinite",
+
             }}
           />
           <span style={{ fontSize: 9, color: T.lime, letterSpacing: "1px" }}>
-            LIVE
+            PREVIEW
           </span>
         </div>
       </div>
 
       {/* Main visual area */}
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
-        {/* Simulated marsh canvas */}
-        <MarshCanvas tick={tick} />
+        <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-white/50">
+          No image selected. Open a project to upload and analyse an image.
+        </div>
 
-        {/* Scan line */}
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            height: 2,
-            background: `linear-gradient(90deg,transparent,${T.lime}CC,transparent)`,
-            boxShadow: `0 0 16px ${T.lime}88`,
-            animation: "scanLine 2.8s ease-in-out infinite",
-            pointerEvents: "none",
-          }}
-        />
-
-        {/* Confidence overlay */}
+        {/* Confidence availability */}
         <div
           style={{
             position: "absolute",
@@ -473,53 +416,10 @@ function HeroAIPanel() {
           >
             Species Confidence
           </div>
-          {species.map((s, i) => (
-            <div
-              key={i}
-              style={{ marginBottom: i < species.length - 1 ? 9 : 0 }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: 3,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 10,
-                    color: "rgba(255,255,255,0.6)",
-                    fontStyle: "italic",
-                  }}
-                >
-                  {s.name}
-                </span>
-                <span style={{ fontSize: 10, color: s.color, fontWeight: 500 }}>
-                  {(s.conf * 100).toFixed(1)}%
-                </span>
-              </div>
-              <div
-                style={{
-                  height: 2,
-                  background: "rgba(255,255,255,0.07)",
-                  borderRadius: 2,
-                }}
-              >
-                <div
-                  style={{
-                    height: "100%",
-                    width: `${s.conf * 100}%`,
-                    background: s.color,
-                    borderRadius: 2,
-                    transition: "width 1.2s ease",
-                  }}
-                />
-              </div>
-            </div>
-          ))}
+          <p className="text-xs text-white/50">No confidence data available.</p>
         </div>
 
-        {/* Inference stage */}
+        {/* Analysis availability */}
         <div
           style={{
             position: "absolute",
@@ -542,52 +442,7 @@ function HeroAIPanel() {
           >
             PIPELINE STATUS
           </div>
-          {inferenceStages.map((s, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: i < 3 ? 5 : 0,
-              }}
-            >
-              <div
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background:
-                    i < inferenceStep
-                      ? T.lime
-                      : i === inferenceStep
-                        ? T.leaf
-                        : "rgba(255,255,255,0.1)",
-                  boxShadow: i === inferenceStep ? `0 0 8px ${T.leaf}` : "none",
-                  transition: "all 0.4s ease",
-                }}
-              />
-              <span
-                style={{
-                  fontSize: 10,
-                  color:
-                    i <= inferenceStep
-                      ? "rgba(255,255,255,0.7)"
-                      : "rgba(255,255,255,0.2)",
-                  transition: "color 0.4s",
-                }}
-              >
-                {s}
-              </span>
-              {i < inferenceStep && (
-                <span
-                  style={{ fontSize: 8, color: T.lime, marginLeft: "auto" }}
-                >
-                  ✓
-                </span>
-              )}
-            </div>
-          ))}
+          <p className="text-xs text-white/50">No analysis selected.</p>
         </div>
 
         {/* Dominance score pill */}
@@ -620,7 +475,7 @@ function HeroAIPanel() {
               letterSpacing: "-1px",
             }}
           >
-            {(0.68 + Math.sin(tick / 25) * 0.06).toFixed(2)}
+            —
           </div>
         </div>
       </div>
@@ -639,259 +494,8 @@ function HeroAIPanel() {
           whiteSpace: "nowrap",
         }}
       >
-        <LogStream tick={tick} />
+        Open a completed analysis to view its saved results.
       </div>
     </div>
-  );
-}
-
-function MarshCanvas({ tick }: { tick: number }) {
-  const blobs = useRef([
-    {
-      x: 12,
-      y: 18,
-      w: 28,
-      h: 22,
-      color: "rgba(74,158,28,0.4)",
-      label: "S.mar",
-      rx: 12,
-    },
-    {
-      x: 44,
-      y: 12,
-      w: 32,
-      h: 28,
-      color: "rgba(43,107,8,0.35)",
-      label: "P.mar",
-      rx: 10,
-    },
-    {
-      x: 78,
-      y: 20,
-      w: 22,
-      h: 20,
-      color: "rgba(74,158,28,0.38)",
-      label: "S.mar",
-      rx: 8,
-    },
-    {
-      x: 10,
-      y: 52,
-      w: 30,
-      h: 24,
-      color: "rgba(140,200,64,0.28)",
-      label: "Mix",
-      rx: 14,
-    },
-    {
-      x: 48,
-      y: 55,
-      w: 28,
-      h: 22,
-      color: "rgba(43,107,8,0.33)",
-      label: "P.mar",
-      rx: 10,
-    },
-    {
-      x: 76,
-      y: 48,
-      w: 24,
-      h: 26,
-      color: "rgba(74,158,28,0.4)",
-      label: "S.mar",
-      rx: 8,
-    },
-    {
-      x: 6,
-      y: 75,
-      w: 20,
-      h: 18,
-      color: "rgba(43,107,8,0.3)",
-      label: "P.mar",
-      rx: 8,
-    },
-    {
-      x: 32,
-      y: 72,
-      w: 36,
-      h: 20,
-      color: "rgba(74,158,28,0.35)",
-      label: "S.mar",
-      rx: 12,
-    },
-    {
-      x: 72,
-      y: 70,
-      w: 22,
-      h: 24,
-      color: "rgba(140,200,64,0.25)",
-      label: "Mix",
-      rx: 10,
-    },
-  ]);
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        backgroundImage: `url(/images/imgbg.png)`,
-        backgroundSize: "cover",
-        overflow: "hidden",
-      }}
-    >
-      {/* Tonal terrain patches */}
-      {[
-        {
-          t: "18%",
-          l: "5%",
-          w: "35%",
-          h: "30%",
-          bg: "radial-gradient(ellipse,rgba(40,80,15,0.5) 0%,transparent 80%)",
-        },
-        {
-          t: "45%",
-          l: "38%",
-          w: "45%",
-          h: "35%",
-          bg: "radial-gradient(ellipse,rgba(30,60,10,0.55) 0%,transparent 80%)",
-        },
-        {
-          t: "65%",
-          l: "8%",
-          w: "30%",
-          h: "28%",
-          bg: "radial-gradient(ellipse,rgba(35,70,12,0.45) 0%,transparent 80%)",
-        },
-      ].map((p, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            top: p.t,
-            left: p.l,
-            width: p.w,
-            height: p.h,
-            background: p.bg,
-          }}
-        />
-      ))}
-
-      {/* Segmentation blobs */}
-      {blobs.current.map((b, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            left: `${b.x}%`,
-            top: `${b.y}%`,
-            width: `${b.w}%`,
-            height: `${b.h}%`,
-            background: b.color,
-            border: `1px solid ${b.color.replace(/[\d.]+\)$/, "0.7)")}`,
-            borderRadius: b.rx,
-            animation: `fadeInPatch 0.6s ease ${0.8 + i * 0.12}s both`,
-          }}
-        >
-          <span
-            style={{
-              position: "absolute",
-              top: 4,
-              left: 5,
-              fontFamily: T.mono,
-              fontSize: "clamp(6px,0.9vw,9px)",
-              color: "rgba(255,255,255,0.8)",
-              background: "rgba(0,0,0,0.55)",
-              padding: "2px 5px",
-              borderRadius: 4,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {b.label}
-          </span>
-        </div>
-      ))}
-
-      {/* Coordinate crosshair at center */}
-      <div
-        style={{
-          position: "absolute",
-          left: "50%",
-          top: "50%",
-          transform: "translate(-50%,-50%)",
-          width: 24,
-          height: 24,
-          border: `1px solid ${T.lime}88`,
-          borderRadius: "50%",
-          animation: "crosshairPulse 2s ease-in-out infinite",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            left: "50%",
-            top: 0,
-            bottom: 0,
-            width: 1,
-            background: `${T.lime}44`,
-            transform: "translateX(-50%)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: 0,
-            right: 0,
-            height: 1,
-            background: `${T.lime}44`,
-            transform: "translateY(-50%)",
-          }}
-        />
-      </div>
-
-      {/* Floating coordinate tags */}
-      {[
-        { top: "8%", left: "3%", text: "51.892°N 1.034°W" },
-        { top: "8%", right: "3%", text: "GSD: 2.1 cm/px" },
-        { bottom: "22%", left: "3%", text: "Alt: 30m AGL" },
-      ].map((tag, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            ...tag,
-            fontFamily: T.mono,
-            fontSize: 8,
-            color: "rgba(255,255,255,0.3)",
-            letterSpacing: "0.5px",
-          }}
-        >
-          {tag.text}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function LogStream({ tick }: { tick: number }) {
-  const logs = [
-    "tile_0024.png → SegFormer-B5 → mask_0024.pt",
-    "blob_detection: 14 regions found | min_area=120px",
-    "ConvNeXt: S.maritima=0.961 P.maritima=0.039",
-    "dominance_score: zone_A=0.74 zone_B=0.52",
-    "writing GeoJSON → output/survey_20240715.geojson",
-    "MAE validation: 0.078 vs quadrat_ref_B3",
-    "tile_0025.png → SegFormer-B5 → mask_0025.pt",
-    "mIoU checkpoint: 0.941 | OA: 0.973",
-  ];
-  const idx = Math.floor(tick / 30) % logs.length;
-  const log = logs[idx];
-  return (
-    <span>
-      <span style={{ color: T.lime }}>› </span>
-      {log}
-      <span style={{ animation: "blink 1s step-end infinite" }}>_</span>
-    </span>
   );
 }

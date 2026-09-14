@@ -65,11 +65,11 @@ export function FileCard({ file, active, onClick, onRemove }: FileCardProps) {
       {(file.status === "registering" ||
         file.status === "uploading" ||
         file.status === "paused") && (
-        <div className="mb-2 h-0.5 overflow-hidden rounded bg-black/10">
+        <div className="mb-2 h-0.5 overflow-hidden rounded bg-black/10" aria-hidden="true">
           <div
             className="h-full rounded transition-[width]"
             style={{
-              width: file.status === "registering" ? "8%" : `${file.progress}%`,
+              width: `${file.progress}%`,
               background:
                 file.status === "registering"
                   ? `linear-gradient(90deg,${T.amber},#F8C66A)`

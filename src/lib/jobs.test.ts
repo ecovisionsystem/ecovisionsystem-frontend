@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError, apiRequest } from "./api-client";
-import { createJob } from "./jobs";
+import { createJob, getInferenceResult } from "./jobs";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -72,4 +72,21 @@ describe("job API", () => {
       requestId: "request-safe-1",
     });
   });
+});
+
+
+it("loads the requested persisted result without browser caching", async () => {
+  vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://api.example.test");
+  const persisted = { id: "result-1", jobId: "job-1", dominanceStats: [{ mean: 0.41 }] };
+  const fetchMock = vi.fn(async () => new Response(JSON.stringify(persisted)));
+  vi.stubGlobal("fetch", fetchMock);
+  expect(await getInferenceResult("job-1", "synthetic")).toEqual(persisted);
+  expect(await getInferenceResult("job-1", "synthetic")).toEqual(persisted);
+  expect(fetchMock).toHaveBeenCalledWith("https://api.example.test/api/v1/results/job-1", expect.objectContaining({ cache: "no-store" }));
+});
+
+it("rejects a result belonging to a different job", async () => {
+  vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://api.example.test");
+  vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ jobId: "different-job" }))));
+  await expect(getInferenceResult("job-1", "synthetic")).rejects.toThrow("The analysis result could not be verified.");
 });

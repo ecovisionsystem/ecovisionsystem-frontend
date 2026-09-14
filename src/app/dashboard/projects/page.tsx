@@ -50,7 +50,7 @@ export default function ProjectsPage() {
             <h2 className="text-lg font-semibold text-red-900">
               Projects are temporarily unavailable
             </h2>
-            <p className="mt-2 text-sm text-red-700">{projectsQuery.error.message}</p>
+            <p className="mt-2 text-sm text-red-700">Projects could not be loaded. Please try again later.</p>
           </Card>
         ) : projects.length === 0 ? (
           <Card className="text-center">

@@ -69,9 +69,7 @@ export function uploadPreviewErrorMessage(error: unknown) {
     return "The image preview service is temporarily unavailable.";
   }
 
-  return error instanceof Error
-    ? error.message
-    : "The uploaded image preview could not be loaded.";
+  return "The uploaded image preview could not be loaded.";
 }
 
 export async function listProjectUploads(projectId: string, token?: string) {

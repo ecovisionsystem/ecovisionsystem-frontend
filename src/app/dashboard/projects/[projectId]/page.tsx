@@ -36,7 +36,7 @@ export default function ProjectWorkspacePage() {
             { label: "Projects", href: "/dashboard/projects" },
           ]}
         />
-        <div className="p-6 text-sm text-red-700">{projectQuery.error.message}</div>
+        <div className="p-6 text-sm text-red-700">This project could not be loaded. Please try again later.</div>
       </AppShell>
     );
   }
@@ -60,6 +60,7 @@ export default function ProjectWorkspacePage() {
         ]}
       />
       <UploadDashboard
+        key={projectId}
         projectId={projectId}
         projectName={projectName}
         initialUploadedFiles={[]}

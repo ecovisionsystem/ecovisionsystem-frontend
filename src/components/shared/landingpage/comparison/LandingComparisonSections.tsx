@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { landingComparisonTheme as L } from "@/styles/style";
 import {
-  Counter,
   Pill,
   SectionHeader,
   ShellCard,
@@ -62,11 +61,11 @@ export default function LandingComparisonSections() {
 
 function MetricsStrip() {
   const metrics = [
-    { value: 96.2, suffix: "%", decimals: 1, label: "Pixel-level Accuracy" },
-    { value: 99, suffix: "%", decimals: 1, label: "Species Classification" },
-    { value: 2, suffix: "cm", decimals: 0, label: "Ground Sampling Distance" },
-    { value: 8, suffix: "x", decimals: 0, label: "Faster than Field Survey" },
-    { value: 94, suffix: "%", decimals: 0, label: "Mean IoU" },
+    { label: "Pixel-level Accuracy" },
+    { label: "Species Classification" },
+    { label: "Ground Sampling Distance" },
+    { label: "Faster than Field Survey" },
+    { label: "Mean IoU" },
   ];
 
   return (
@@ -94,11 +93,7 @@ function MetricsStrip() {
                   lineHeight: 1,
                 }}
               >
-                <Counter
-                  to={metric.value}
-                  suffix={metric.suffix}
-                  decimals={metric.decimals}
-                />
+                <span aria-label="Not yet verified">—</span>
               </div>
               <div
                 style={{
@@ -108,7 +103,7 @@ function MetricsStrip() {
                   marginTop: 8,
                 }}
               >
-                {metric.label}
+                {metric.label}<span className="block text-xs">Not yet verified</span>
               </div>
             </div>
           ))}
@@ -293,7 +288,7 @@ function SolutionSection() {
         ["Architecture", "SegFormer-B5"],
         ["Tile size", "512x512 px"],
         ["Classes", "4 vegetation classes"],
-        ["mIoU", "94.1%"],
+        ["mIoU", "Not yet verified"],
       ],
     },
     {
@@ -305,19 +300,19 @@ function SolutionSection() {
       specs: [
         ["Architecture", "ConvNeXt-Base"],
         ["Input", "Blob patches"],
-        ["Accuracy", "97.3%"],
+        ["Accuracy", "Not yet verified"],
         ["Classes", "S. maritima · P. maritima"],
       ],
     },
     {
       n: "04",
       title: "Dominance Scoring",
-      sub: "Novel ecological metric · field-validated",
+      sub: "Ecological metric · validation pending",
       image: remoteImages.marsh,
       desc: "A dominance index quantifies inter-species competitive dominance per 2x2m grid cell and exports GIS-ready outputs.",
       specs: [
         ["Resolution", "2x2 m grid"],
-        ["Validation", "MAE 0.078"],
+        ["Validation", "Not yet verified"],
         ["Output", "GeoJSON · CSV · raster"],
         ["Coverage", "Per hectare in <4 min"],
       ],
@@ -492,10 +487,10 @@ function ScienceSection() {
           />
           <div className="mt-10 grid grid-cols-2 gap-3">
             {[
-              ["96.2%", "Pixel accuracy"],
-              ["99.0%", "Species classification"],
-              ["0.941", "Mean IoU"],
-              ["<8%", "Dominance MAE"],
+              ["—", "Pixel accuracy · unverified"],
+              ["—", "Species classification · unverified"],
+              ["—", "Mean IoU · unverified"],
+              ["—", "Dominance MAE · unverified"],
             ].map(([value, label], index) => (
               <div
                 key={label}
@@ -625,69 +620,6 @@ function ComparisonArchitecture() {
 
 function LiveVisualization() {
   const [mode, setMode] = useState("segment");
-  const patches = [
-    {
-      x: 5,
-      y: 8,
-      w: 30,
-      h: 30,
-      sp: "S. maritima",
-      conf: 97.1,
-      dom: 0.74,
-      ca: "78,158,31",
-    },
-    {
-      x: 38,
-      y: 5,
-      w: 25,
-      h: 35,
-      sp: "P. maritima",
-      conf: 94.5,
-      dom: 0.52,
-      ca: "47,107,20",
-    },
-    {
-      x: 66,
-      y: 12,
-      w: 28,
-      h: 26,
-      sp: "S. maritima",
-      conf: 95.9,
-      dom: 0.68,
-      ca: "78,158,31",
-    },
-    {
-      x: 8,
-      y: 46,
-      w: 22,
-      h: 28,
-      sp: "Mixed",
-      conf: 88.4,
-      dom: 0.31,
-      ca: "125,209,58",
-    },
-    {
-      x: 36,
-      y: 50,
-      w: 27,
-      h: 30,
-      sp: "P. maritima",
-      conf: 93.8,
-      dom: 0.55,
-      ca: "47,107,20",
-    },
-    {
-      x: 70,
-      y: 48,
-      w: 22,
-      h: 24,
-      sp: "S. maritima",
-      conf: 96.2,
-      dom: 0.71,
-      ca: "78,158,31",
-    },
-  ];
-
   return (
     <section
       className="lc-section lc-grain"
@@ -696,13 +628,13 @@ function LiveVisualization() {
       <div className="lc-container" style={{ position: "relative", zIndex: 2 }}>
         <div style={{ marginBottom: 52 }}>
           <SectionHeader
-            eyebrow="Live AI Visualisation"
+            eyebrow="Analysis views"
             dark
             title={
               <>
-                Watch the intelligence
+                Explore your analysis
                 <br />
-                <em style={{ color: L.lime }}>work in real time.</em>
+                <em style={{ color: L.lime }}>when results are ready.</em>
               </>
             }
           />
@@ -763,7 +695,7 @@ function LiveVisualization() {
                 fontWeight: 700,
               }}
             >
-              LIVE INFERENCE
+              NO ANALYSIS SELECTED
             </span>
           </div>
           <div
@@ -777,69 +709,10 @@ function LiveVisualization() {
                   : "linear-gradient(155deg,#0f1c05,#091202 50%,#101e04)",
             }}
           >
-            {patches.map((patch, index) => {
-              if (mode === "compare" && patch.x <= 45) return null;
-              const alpha = mode === "heatmap" ? 0.25 + patch.dom * 0.6 : 0.48;
-              return (
-                <div
-                  key={index}
-                  style={{
-                    position: "absolute",
-                    left: `${patch.x}%`,
-                    top: `${patch.y}%`,
-                    width: `${patch.w}%`,
-                    height: `${patch.h}%`,
-                    background: `rgba(${patch.ca},${alpha})`,
-                    border: `1.5px solid rgba(${patch.ca},.75)`,
-                    borderRadius: 6,
-                    animation: "lcFadeUp .5s ease both",
-                    animationDelay: `${index * 0.07}s`,
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 4,
-                      left: 4,
-                      background: "rgba(0,0,0,.7)",
-                      borderRadius: 4,
-                      padding: "2px 7px",
-                      color: "rgba(255,255,255,.85)",
-                      fontSize: 9,
-                    }}
-                  >
-                    <em>{patch.sp}</em>{" "}
-                    <strong style={{ color: L.lime }}>
-                      {mode === "heatmap" ? `D:${patch.dom}` : `${patch.conf}%`}
-                    </strong>
-                  </div>
-                </div>
-              );
-            })}
-            {mode === "segment" && (
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  height: 2,
-                  background:
-                    "linear-gradient(90deg,transparent,rgba(125,209,58,.9),transparent)",
-                  animation: "lcScanDown 3s ease-in-out infinite",
-                }}
-              />
-            )}
-            {mode === "heatmap" && (
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "radial-gradient(ellipse 60% 50% at 25% 35%,rgba(78,158,31,.12),transparent 60%)",
-                  animation: "lcHeatFlick 3s ease infinite",
-                }}
-              />
-            )}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center text-white/60">
+              <p>No {mode === "heatmap" ? "dominance heatmap" : mode === "compare" ? "before / after images" : mode === "temporal" ? "temporal change data" : "segmentation artifact"} available.</p>
+              <a href="/dashboard/projects" className="underline underline-offset-4">Open a project to view saved analysis results</a>
+            </div>
           </div>
         </div>
       </div>
@@ -930,7 +803,7 @@ function ImpactSection() {
 function WhyNowSection() {
   const forces = [
     ["Climate Urgency", "30%", "global wetland loss since 1970"],
-    ["AI Maturity", "94%", "mIoU now exceeds survey fidelity"],
+    ["AI Maturity", "—", "Scientific validation pending"],
     ["Drone Accessibility", "2cm", "GSD at low operational cost"],
     ["Cloud Compute", "<4 min", "per-hectare GPU inference"],
   ];

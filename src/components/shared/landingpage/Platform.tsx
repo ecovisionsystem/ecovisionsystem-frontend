@@ -28,7 +28,7 @@ export default function Platform() {
         ["Architecture", "SegFormer-B5"],
         ["Tile size", "512x512 px"],
         ["Classes", "4 vegetation classes"],
-        ["mIoU", "94.1%"],
+        ["mIoU", "Not yet verified"],
       ],
     },
     {
@@ -40,19 +40,19 @@ export default function Platform() {
       specs: [
         ["Architecture", "ConvNeXt-Base"],
         ["Input", "Blob patches"],
-        ["Accuracy", "97.3%"],
+        ["Accuracy", "Not yet verified"],
         ["Classes", "S. maritima · P. maritima"],
       ],
     },
     {
       n: "04",
       title: "Dominance Scoring",
-      sub: "Novel ecological metric · field-validated",
+      sub: "Ecological metric · validation pending",
       image: remoteImages.marsh,
       desc: "A dominance index quantifies inter-species competitive dominance per 2x2m grid cell and exports GIS-ready outputs.",
       specs: [
         ["Resolution", "2x2 m grid"],
-        ["Validation", "MAE 0.078"],
+        ["Validation", "Not yet verified"],
         ["Output", "GeoJSON · CSV · raster"],
         ["Coverage", "Per hectare in <4 min"],
       ],

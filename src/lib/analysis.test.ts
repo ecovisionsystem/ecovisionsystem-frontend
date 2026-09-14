@@ -3,6 +3,8 @@ import {
   ACTIVE_JOB_POLL_INTERVAL_MS,
   analysisPollInterval,
   dominantSpecies,
+  formatDominancePercent,
+  groupAnalysisStatusCounts,
   isAnalysisJobApiStatus,
   normalizeAnalysisStatus,
   shortJobReference,
@@ -25,7 +27,7 @@ describe("analysis status contract", () => {
 
   it("fails closed for an unknown backend status", () => {
     expect(isAnalysisJobApiStatus("mystery")).toBe(false);
-    expect(normalizeAnalysisStatus("mystery")).toBe("failed");
+    expect(normalizeAnalysisStatus("mystery")).toBe("unknown");
   });
 
   it("polls only active states every four seconds", () => {
@@ -58,4 +60,28 @@ describe("authoritative result presentation", () => {
       "JOB-EF123456",
     );
   });
+});
+
+
+describe("missing and invalid dominance measurements", () => {
+  it.each([NaN, Infinity, -0.1, 1.1])("does not invent a percentage for %s", (mean) => {
+    expect(formatDominancePercent(mean)).toBe("Unavailable");
+    expect(dominantSpecies([{ vegetationClass: "example", mean }])).toBeNull();
+  });
+  it("preserves valid zero and measured percentages", () => {
+    expect(formatDominancePercent(0)).toBe("0.0%");
+    expect(formatDominancePercent(0.614)).toBe("61.4%");
+    expect(formatDominancePercent(1)).toBe("100.0%");
+  });
+});
+
+
+it("groups backend counts under the shared labels without losing jobs", () => {
+  const groups = groupAnalysisStatusCounts({
+    pending: 2, queued: 3, preprocessing: 1, inferencing: 4, postprocessing: 2,
+    completed: 8, failed: 1, cancelled: 2, unrecognized: 1,
+  });
+  expect(groups.map(({ status, count }) => [normalizeAnalysisStatus(status), count])).toEqual([
+    ["queued", 5], ["processing", 7], ["completed", 8], ["failed", 1], ["cancelled", 2], ["unknown", 1],
+  ]);
 });
