@@ -4,7 +4,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import ResultsPage from "@/app/results/[jobId]/page";
 
 const queries = vi.hoisted(() => ({ job: vi.fn(), result: vi.fn(), project: vi.fn(), upload: vi.fn() }));
-vi.mock("next/navigation", () => ({ useParams: () => ({ jobId: "example-job" }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }), useParams: () => ({ jobId: "example-job" }) }));
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({ user: { id: "example-user" }, isLoading: false, signOut: vi.fn() }),
   useRequireAuth: vi.fn(),

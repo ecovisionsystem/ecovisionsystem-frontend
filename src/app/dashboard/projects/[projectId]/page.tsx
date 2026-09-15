@@ -1,7 +1,9 @@
 "use client";
 
+import { DeleteDataButton } from "@/components/deletion/delete-data-button";
+
 import React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useAuth, useRequireAuth } from "@/hooks/useAuth";
 import { AppShell, PageHeader } from "@/components/layout";
 import { UploadDashboard } from "@/components/upload/upload-dashboard";
@@ -9,6 +11,7 @@ import { projectPurposeLabels } from "@/lib/projects";
 import { useProject } from "@/hooks/useAnalysisQueries";
 
 export default function ProjectWorkspacePage() {
+  const router = useRouter();
   const params = useParams();
   const projectId = params.projectId as string;
   const { user, isLoading, signOut } = useAuth();
@@ -47,6 +50,7 @@ export default function ProjectWorkspacePage() {
   return (
     <AppShell user={user} onSignOut={signOut}>
       <PageHeader
+        action={<DeleteDataButton kind="project" resourceId={projectId} name={projectName} onDeleted={() => router.replace("/dashboard/projects")} />}
         title={projectName}
         description={
           project

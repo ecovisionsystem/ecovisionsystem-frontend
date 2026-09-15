@@ -1,5 +1,7 @@
 "use client";
 
+import { DeleteDataButton } from "@/components/deletion/delete-data-button";
+
 import React, { useState } from "react";
 import Link from "next/link";
 import { FolderPlus } from "lucide-react";
@@ -64,11 +66,8 @@ export default function ProjectsPage() {
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {projects.map((project) => (
-              <Link
-                key={project.id}
-                href={`/dashboard/projects/${project.id}`}
-              >
-                <Card className="h-full transition-colors hover:bg-surface-overlay">
+              <Card key={project.id} className="h-full transition-colors hover:bg-surface-overlay">
+                <Link className="block" href={`/dashboard/projects/${project.id}`}>
                   <p className="text-lg font-semibold text-text-primary">
                     {project.name}
                   </p>
@@ -78,8 +77,9 @@ export default function ProjectsPage() {
                   <p className="mt-4 text-xs text-text-muted">
                     Created {new Date(project.createdAt).toLocaleDateString()}
                   </p>
-                </Card>
-              </Link>
+                </Link>
+                <div className="mt-4"><DeleteDataButton kind="project" resourceId={project.id} name={project.name} /></div>
+              </Card>
             ))}
           </div>
         )}

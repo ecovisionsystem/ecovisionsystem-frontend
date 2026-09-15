@@ -1,5 +1,7 @@
 "use client";
 
+import { DeleteDataButton } from "@/components/deletion/delete-data-button";
+
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -90,6 +92,10 @@ export function FileDetail({
           </div>
         </div>
 
+        {file.uploadId && <div className="mb-4">
+          <DeleteDataButton kind="upload" resourceId={file.uploadId} name={file.name}
+            onDeleted={() => onRemove?.(file.id)} />
+        </div>}
         <div className="flex border-b border-border" role="tablist">
           {tabs.map((item) => (
             <button
