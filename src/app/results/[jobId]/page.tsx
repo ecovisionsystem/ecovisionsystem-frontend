@@ -1,8 +1,10 @@
 "use client";
 
+import { DeleteDataButton } from "@/components/deletion/delete-data-button";
+
 import React from "react";
 import { Download } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ResultImageViewer } from "@/components/analysis/result-image-viewer";
 import { AnalysisStatus } from "@/components/analysis/analysis-status";
 import { AppShell, PageHeader } from "@/components/layout";
@@ -28,6 +30,7 @@ import { ApiError } from "@/lib/api-client";
 
 export default function ResultsPage() {
   const { user, isLoading, signOut } = useAuth();
+  const router = useRouter();
   const jobId = useParams().jobId as string;
   const jobQuery = useJob(jobId);
   const jobState = jobQuery.data
@@ -77,6 +80,7 @@ export default function ResultsPage() {
     <AppShell user={user} onSignOut={signOut}>
       <PageHeader
         title="Analysis Result"
+        action={<DeleteDataButton kind="job" resourceId={job.id} name={reference} onDeleted={() => router.replace(`/dashboard/projects/${job.projectId}`)} />}
         description={reference}
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },

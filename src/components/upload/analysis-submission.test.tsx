@@ -8,6 +8,7 @@ import type { UploadQueueFile } from "./upload-types";
 
 const state = vi.hoisted(() => ({ job: {} as { data?: { status: string }; error?: Error } }));
 vi.mock("@/hooks/useAnalysisQueries", () => ({ useJob: () => state.job }));
+vi.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ user: null, apiToken: undefined }) }));
 vi.stubGlobal("React", React);
 afterAll(() => { vi.unstubAllGlobals(); });
 beforeEach(() => { state.job = {}; });
